@@ -1,0 +1,4 @@
+appName: istiod
+namespace: istio-system
+cluster: ops
+server: https://kubernetes.default.svc
