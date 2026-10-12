@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: httpbin-egress
+  labels:
+    istio.io/use-waypoint: waypoint
+spec:
+  hosts:
+    - httpbin.org
+  ports:
+    - number: 80
+      name: http
+      protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: DNS

@@ -279,3 +279,33 @@ Allow a few Prometheus scrape intervals for graph edges to appear. Ztunnel repor
 ambient traffic as TCP. HTTP metrics for service-to-service requests require a
 waypoint in the application's namespace; the waypoint in `default` does not
 serve `bookinfo`. The shared ingress itself also emits HTTP metrics.
+
+The gateway namespace is associated with the default Istio control-plane revision
+by `bootstrap/cluster-resources/in-cluster/istio-gateways-ns.yaml`
+(`istio.io/rev: default`). It stays outside ambient capture with
+`istio.io/dataplane-mode: none`. This lets Kiali include shared Gateways when
+validating cross-namespace VirtualService references. An unlabeled gateway
+namespace can produce a false KIA1102 warning even while ingress routing works.
+
+## Ambient egress lab
+
+`addons/default/waypoint/base/httpbin-egress.yaml` registers `httpbin.org:80` as
+an external HTTP service and binds it to `default/waypoint`. The `waypoint-ops`
+Application manages this resource. Ambient DNS capture and ServiceEntry address
+auto-allocation route calls from Bookinfo through ztunnel and the waypoint to the
+external host. This uses the ambient waypoint, independently of the traditional
+`istio-egressgateway` deployment.
+
+After Git sync, test from Bookinfo and check the waypoint access log:
+
+```bash
+kubectl -n bookinfo exec deployment/productpage-v1 -- \
+  python -c 'import urllib.request; print(urllib.request.urlopen("http://httpbin.org/get", timeout=15).read().decode())'
+kubectl -n default logs deployment/waypoint --since=2m | grep httpbin
+```
+
+A response confirms external connectivity; a matching access log confirms traversal
+of the waypoint. No GET-only policy is enabled automatically. The optional
+`examples/waypoint/allow-get.yaml` can be included in the waypoint base to test
+Layer 7 enforcement, but affects all traffic using that waypoint. This lab does
+not block other external destinations or enforce a mandatory cluster exit path.
