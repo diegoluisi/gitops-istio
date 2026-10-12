@@ -287,28 +287,38 @@ by `bootstrap/cluster-resources/in-cluster/istio-gateways-ns.yaml`
 validating cross-namespace VirtualService references. An unlabeled gateway
 namespace can produce a false KIA1102 warning even while ingress routing works.
 
-## Ambient egress lab
+## Restricted Bookinfo egress
 
-`addons/default/waypoint/base/httpbin-egress.yaml` registers `httpbin.org:80` as
-an external HTTP service and binds it to `default/waypoint`. The `waypoint-ops`
-Application manages this resource. Ambient DNS capture and ServiceEntry address
-auto-allocation route calls from Bookinfo through ztunnel and the waypoint to the
-external host. This uses the ambient waypoint, independently of the traditional
-`istio-egressgateway` deployment.
+Bookinfo's dev overlay owns `httpbin-egress`, a ServiceEntry for `httpbin.org:80`,
+and `egress-waypoint`, a dedicated waypoint in namespace `bookinfo`. The entry
+is scoped with `exportTo: ["."]` and selects the egress waypoint explicitly.
+The original `default` namespace entry is removed; its general waypoint remains.
 
-After Git sync, test from Bookinfo and check the waypoint access log:
+The egress waypoint ALLOW policy accepts HTTP host `httpbin.org` (including its
+explicit `:80` form). Bookinfo's egress NetworkPolicies allow workloads to reach
+DNS, Istiod, Alloy tracing, and Bookinfo services/waypoints. Direct internet access
+is blocked. Only the egress waypoint can open external TCP port 80 connections;
+its HTTP authorization limits requests to httpbin. HTTPS to httpbin is not enabled
+in this HTTP lab. These policies require NetworkPolicy enforcement; the installed
+kindnetd supports it. Internal Bookinfo traffic and ingress remain available.
+
+After Git sync:
 
 ```bash
+kubectl -n bookinfo rollout status deployment/egress-waypoint
 kubectl -n bookinfo exec deployment/productpage-v1 -- \
-  python -c 'import urllib.request; print(urllib.request.urlopen("http://httpbin.org/get", timeout=15).read().decode())'
-kubectl -n default logs deployment/waypoint --since=2m | grep httpbin
+  python -c 'import urllib.request; print(urllib.request.urlopen("http://httpbin.org/get", timeout=10).status)'
+# Expected: timeout / denied direct outbound access
+kubectl -n bookinfo exec deployment/productpage-v1 -- \
+  python -c 'import urllib.request; print(urllib.request.urlopen("https://github.com", timeout=5).status)'
+kubectl -n bookinfo logs deployment/egress-waypoint --since=2m | grep httpbin
 ```
 
-A response confirms external connectivity; a matching access log confirms traversal
-of the waypoint. No GET-only policy is enabled automatically. The optional
-`examples/waypoint/allow-get.yaml` can be included in the waypoint base to test
-Layer 7 enforcement, but affects all traffic using that waypoint. This lab does
-not block other external destinations or enforce a mandatory cluster exit path.
+The policies preserve Bookinfo's current port 9080 internal dependencies. Add
+specific internal destinations/ports when the app acquires new dependencies.
+This restriction applies to Bookinfo workloads; it does not impose a global
+internet allowlist on the other application or infrastructure namespaces.
+
 
 ## Tracing: Istio → Alloy → Tempo → Grafana
 

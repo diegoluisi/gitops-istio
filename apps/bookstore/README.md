@@ -41,10 +41,9 @@ service. Ztunnel secures ambient workload connections; the waypoint processes L7
 traffic. The mesh-wide tracing policy sends proxy spans to the existing Alloy
 and Tempo. No second Alloy, Tempo, Grafana, or egress proxy is needed for this app.
 
-The existing external ServiceEntry for httpbin in `default` is shared mesh
-configuration, and can be used by bookstore's ambient pods. This is separate from
-its namespace waypoint; creating a waypoint does not automatically route all
-internet traffic through it.
+The httpbin egress lab is now owned by Bookinfo, with a dedicated egress waypoint
+and network policies in that namespace. Bookstore does not inherit Bookinfo's
+egress restriction; it needs its own external-service and policy decisions.
 
 Dev currently simulates a cluster using the same Kubernetes API server as ops.
 On a real separate dev cluster, install the shared infrastructure there and set
