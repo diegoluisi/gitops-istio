@@ -10,7 +10,12 @@ spec:
     view_only_mode: true
   external_services:
     prometheus:
-      url: http://prometheus.istio-system.svc.cluster.local:9090
+      url: http://mimir.mimir.svc.cluster.local:9009/prometheus
+      health_check_url: http://mimir.mimir.svc.cluster.local:9009/ready
+      thanos_proxy:
+        enabled: true
+        scrape_interval: 15s
+        retention_period: 7d
     grafana:
       enabled: false
     tracing:

@@ -20,6 +20,9 @@ grafana.ini:
 datasources:
   datasources.yaml:
     apiVersion: 1
+    deleteDatasources:
+      - name: Prometheus
+        orgId: 1
     datasources:
       - name: Tempo
         uid: tempo
@@ -28,9 +31,20 @@ datasources:
         url: http://tempo.tempo.svc.cluster.local:3200
         isDefault: true
         editable: false
-      - name: Prometheus
-        uid: prometheus
+      - name: Mimir
+        uid: mimir
         type: prometheus
         access: proxy
-        url: http://prometheus.istio-system.svc.cluster.local:9090
+        url: http://mimir.mimir.svc.cluster.local:9009/prometheus
         editable: false
+sidecar:
+  dashboards:
+    enabled: true
+    label: grafana_dashboard
+    searchNamespace: grafana
+    folder: /tmp/dashboards
+    provider:
+      name: gitops
+      folder: Istio
+      disableDelete: false
+      allowUiUpdates: false

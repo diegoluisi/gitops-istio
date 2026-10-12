@@ -248,12 +248,11 @@ Gateway and ingress pods; these cross-namespace references stay within one clust
 ## Kiali traffic visualization
 
 The ops directory generator discovers `kiali-operator-ops`, `kiali-ops`, and
-`prometheus-ops`. Kiali Operator `2.26.0` runs in `kiali-system` and manages the Kiali instance in
-`istio-system`; Prometheus uses the official Istio `1.30.3` sample addon with
-Istio telemetry scraping. This is a lab metrics backend with ephemeral storage.
+`mimir-ops`. Kiali Operator `2.26.0` runs in `kiali-system` and manages the Kiali instance in
+`istio-system`; Alloy scrapes Istio telemetry and remote-writes to Mimir, the lab metrics
+backend with persistent storage.
 Kiali is read-only, with anonymous authentication for local port-forward access.
-Kiali queries Tempo for traces. Grafana has its own provisioned Tempo and
-Prometheus datasources. The ops overlay routes `/kiali` and `/kiali/` through
+Kiali queries Tempo for traces. Grafana has provisioned Tempo and Mimir datasources. The ops overlay routes `/kiali` and `/kiali/` through
 `istio-gateways/shared-ingress` to Kiali on port 20001, without rewriting the path.
 Using the ingress port-forward on port 8080, open `http://localhost:8080/kiali/`.
 Kiali retains anonymous, read-only access for this lab.
@@ -275,7 +274,7 @@ for i in $(seq 1 60); do
 done
 ```
 
-Allow a few Prometheus scrape intervals for graph edges to appear. Ztunnel reports
+Allow a few Alloy scrape intervals for graph edges to appear. Ztunnel reports
 ambient traffic as TCP. HTTP metrics for service-to-service requests require a
 waypoint in the application's namespace; the waypoint in `default` does not
 serve `bookinfo`. The shared ingress itself also emits HTTP metrics.
@@ -328,7 +327,7 @@ The ops ApplicationSet manages these namespace/chart folders:
   the Kiali server and CR remain in `istio-system`.
 - `addons/tempo/tempo`: single-binary Tempo with a 5Gi PVC and 24-hour retention.
 - `addons/grafana/grafana`: Grafana with a 2Gi PVC, provisioned Tempo datasource
-  (`uid: tempo`), and the existing Prometheus datasource.
+  (`uid: tempo`), and the Mimir datasource.
 - `addons/alloy/alloy`: one collector Deployment receiving OTLP gRPC on 4317 and
   HTTP on 4318, batching traces, then exporting to `tempo.tempo:4317`.
 
@@ -390,3 +389,33 @@ reusing cluster ingress, egress, Istio, and observability infrastructure.
 See `apps/bookstore/README.md` for the ownership table and test commands.
 Both app namespaces own their ambient/waypoint labels explicitly; the dev
 ApplicationSet no longer imposes waypoint enrollment on every discovered app.
+
+## Mimir metrics and Istio dashboard
+
+The Prometheus server is replaced by Mimir `3.2.1` in namespace `mimir`.
+`addons/mimir/mimir` deploys a single-process lab instance using the classic
+ingestion architecture, local filesystem storage on a 5Gi PVC, and 7-day
+retention. Multi-tenancy is disabled for this local lab. This is not an HA
+production deployment; a production installation should use distributed Mimir
+and object storage.
+
+Alloy retains the OTLP trace pipeline to Tempo and adds Kubernetes pod discovery
+for annotated Istio metrics endpoints. It scrapes Istiod, ztunnel, gateway proxies,
+and waypoints every 15 seconds and remote-writes to Mimir `/api/v1/push`.
+Grafana's `Mimir` datasource and Kiali query Mimir's Prometheus-compatible API
+at `/prometheus`. Kiali uses its proxy compatibility mode with explicit scrape
+interval and retention because Mimir does not expose Prometheus server config.
+
+The provisioned **Istio Ambient Metrics** dashboard lives in
+`addons/grafana/grafana/overlays/ops/dashboards/istio-ambient.json`. A generated
+ConfigMap and Grafana's dashboard sidecar provision it under the **Istio** folder.
+Open `http://localhost:8080/grafana/d/istio-ambient-overview/` after Git sync.
+Choose the application namespace to view HTTP request rates, 5xx percentages,
+p95 latency, TCP bytes, connection rates, and scrape target health. HTTP panels
+need waypoint/ingress traffic; TCP panels use ztunnel metrics. Reporter series
+are displayed separately to distinguish multiple observation points.
+
+The old Prometheus datasource is removed during Grafana provisioning. Existing
+Prometheus history is not migrated. Retire the old `prometheus-ops` Application
+and its server resources only after Mimir ingestion and Kiali/Grafana queries
+are verified; the ops ApplicationSet preserves resources on deletion.

@@ -25,6 +25,8 @@ spec:
       namespace: grafana
     - server: https://kubernetes.default.svc
       namespace: alloy
+    - server: https://kubernetes.default.svc
+      namespace: mimir
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

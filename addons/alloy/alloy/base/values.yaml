@@ -39,3 +39,67 @@ alloy:
           }
         }
       }
+
+      discovery.kubernetes "istio_pods" {
+        role = "pod"
+      }
+      discovery.relabel "istio_metrics" {
+        targets = discovery.kubernetes.istio_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+          regex = "true"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_phase"]
+          regex = "Running"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_name"]
+          regex = "http-envoy-prom|http-monitoring|ztunnel-stats"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip", "__meta_kubernetes_pod_annotation_prometheus_io_port"]
+          regex = "(.+);([0-9]+)"
+          replacement = "$1:$2"
+          target_label = "__address__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+          regex = "(.+)"
+          target_label = "__metrics_path__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label = "pod"
+        }
+        rule {
+          target_label = "cluster"
+          replacement = "ops"
+        }
+      }
+      prometheus.scrape "istio" {
+        targets = discovery.relabel.istio_metrics.output
+        job_name = "istio"
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      prometheus.scrape "observability" {
+        targets = [
+          {"__address__" = "alloy.alloy.svc.cluster.local:12345"},
+          {"__address__" = "mimir.mimir.svc.cluster.local:9009"},
+        ]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      prometheus.remote_write "mimir" {
+        endpoint {
+          url = "http://mimir.mimir.svc.cluster.local:9009/api/v1/push"
+        }
+      }

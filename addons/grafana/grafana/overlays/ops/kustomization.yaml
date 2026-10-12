@@ -4,3 +4,10 @@ namespace: grafana
 resources:
   - ../../base
   - virtualservice.yaml
+configMapGenerator:
+  - name: istio-ambient-dashboard
+    options:
+      labels:
+        grafana_dashboard: "1"
+    files:
+      - istio-ambient.json=dashboards/istio-ambient.json
