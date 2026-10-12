@@ -70,7 +70,10 @@ sync the Kustomize build option before the generated Applications switch sources
 Then `root` discovers the AppProject and ApplicationSet, and the file generator
 creates the three Applications (`istio-base`, `istiod`, and `istio-gateways`). The generator reads Git,
 so applying the ApplicationSet locally before pushing these files will not
-migrate the running Applications.
+migrate the running Applications. The initial live `istio-gateways` Application
+uses the same two Helm releases in the `default` project until this Git update is
+pushed; the ApplicationSet then adopts it and switches it to the Kustomize source
+and `addons` project.
 
 ```bash
 kubectl -n argocd get applicationsets,applications
