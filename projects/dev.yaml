@@ -12,6 +12,8 @@ spec:
   destinations:
     - server: https://kubernetes.default.svc
       namespace: bookinfo
+    - server: https://kubernetes.default.svc
+      namespace: bookstore
   clusterResourceWhitelist:
     - group: ""
       kind: Namespace
@@ -57,12 +59,6 @@ spec:
         automated:
           prune: true
           selfHeal: true
-        managedNamespaceMetadata:
-          labels:
-            istio.io/dataplane-mode: ambient
-            istio-injection: disabled
-            istio.io/use-waypoint: waypoint
-            istio.io/ingress-use-waypoint: "true"
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true

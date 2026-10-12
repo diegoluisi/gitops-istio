@@ -327,8 +327,8 @@ extension provider. A root-namespace Telemetry resource enables 100% sampling
 for this lab. Gateway and waypoint Envoy proxies export spans to Alloy; ztunnel
 provides Layer 4 telemetry and does not generate HTTP spans.
 
-Bookinfo's dev overlay now creates its own waypoint. The dev ApplicationSet
-labels its managed namespaces with `istio.io/use-waypoint: waypoint` and
+Bookinfo's dev overlay creates its own waypoint. Its Namespace manifest
+labels the application namespace with `istio.io/use-waypoint: waypoint` and
 `istio.io/ingress-use-waypoint: true`. Istiod enables ingress waypoint routing,
 so Bookinfo requests entering through the shared ingress also traverse the
 Bookinfo waypoint. Internal calls get L7 tracing without application sidecars.
@@ -370,3 +370,13 @@ Grafana is also exposed through `istio-gateways/shared-ingress` at
 Helm values set `server.root_url` and `serve_from_sub_path` so assets, API calls,
 and redirects use `/grafana/`. The public URL is configured for the local ingress
 port-forward on 8080; update `root_url` when deploying to a real hostname.
+
+## Second application: bookstore
+
+`apps/bookstore/overlays/dev` demonstrates reuse of the Bookinfo base with
+independent resources in namespace `bookstore`. Its Application is `bookstore-dev`
+and its ingress hostname is `bookstore.local`. It has its own waypoint, while
+reusing cluster ingress, egress, Istio, and observability infrastructure.
+See `apps/bookstore/README.md` for the ownership table and test commands.
+Both app namespaces own their ambient/waypoint labels explicitly; the dev
+ApplicationSet no longer imposes waypoint enrollment on every discovered app.
