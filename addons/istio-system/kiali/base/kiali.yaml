@@ -14,4 +14,9 @@ spec:
     grafana:
       enabled: false
     tracing:
-      enabled: false
+      enabled: true
+      provider: tempo
+      use_grpc: false
+      internal_url: http://tempo.tempo.svc.cluster.local:3200
+      tempo_config:
+        datasource_uid: tempo

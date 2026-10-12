@@ -17,6 +17,14 @@ spec:
       namespace: istio-gateways
     - server: https://kubernetes.default.svc
       namespace: default
+    - server: https://kubernetes.default.svc
+      namespace: kiali-system
+    - server: https://kubernetes.default.svc
+      namespace: tempo
+    - server: https://kubernetes.default.svc
+      namespace: grafana
+    - server: https://kubernetes.default.svc
+      namespace: alloy
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

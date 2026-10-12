@@ -5,6 +5,6 @@ helmCharts:
     repo: https://kiali.org/helm-charts
     version: 2.26.0
     releaseName: kiali-operator
-    namespace: istio-system
+    namespace: kiali-system
     includeCRDs: true
     valuesFile: values.yaml

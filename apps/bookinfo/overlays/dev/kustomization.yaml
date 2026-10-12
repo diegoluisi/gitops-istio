@@ -4,3 +4,4 @@ namespace: bookinfo
 resources:
   - ../../base
   - virtualservice.yaml
+  - waypoint.yaml

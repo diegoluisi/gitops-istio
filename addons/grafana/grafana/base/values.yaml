@@ -1,0 +1,33 @@
+fullnameOverride: grafana
+persistence:
+  enabled: true
+  size: 2Gi
+# No initial admin account is created; this lab uses anonymous Viewer access.
+env:
+  GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: "true"
+  GF_SECURITY_ADMIN_PASSWORD: unused-initial-admin-disabled
+  GF_AUTH_DISABLE_LOGIN_FORM: "true"
+grafana.ini:
+  auth.anonymous:
+    enabled: true
+    org_role: Viewer
+  analytics:
+    reporting_enabled: false
+    check_for_updates: false
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Tempo
+        uid: tempo
+        type: tempo
+        access: proxy
+        url: http://tempo.tempo.svc.cluster.local:3200
+        isDefault: true
+        editable: false
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus.istio-system.svc.cluster.local:9090
+        editable: false

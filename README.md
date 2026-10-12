@@ -248,12 +248,12 @@ Gateway and ingress pods; these cross-namespace references stay within one clust
 ## Kiali traffic visualization
 
 The ops directory generator discovers `kiali-operator-ops`, `kiali-ops`, and
-`prometheus-ops`. Kiali Operator `2.26.0` manages the Kiali instance in
+`prometheus-ops`. Kiali Operator `2.26.0` runs in `kiali-system` and manages the Kiali instance in
 `istio-system`; Prometheus uses the official Istio `1.30.3` sample addon with
 Istio telemetry scraping. This is a lab metrics backend with ephemeral storage.
 Kiali is read-only, with anonymous authentication for local port-forward access.
-Grafana and tracing integrations are disabled because those services are not
-installed. The ops overlay routes `/kiali` and `/kiali/` through
+Kiali queries Tempo for traces. Grafana has its own provisioned Tempo and
+Prometheus datasources. The ops overlay routes `/kiali` and `/kiali/` through
 `istio-gateways/shared-ingress` to Kiali on port 20001, without rewriting the path.
 Using the ingress port-forward on port 8080, open `http://localhost:8080/kiali/`.
 Kiali retains anonymous, read-only access for this lab.
@@ -309,3 +309,55 @@ of the waypoint. No GET-only policy is enabled automatically. The optional
 `examples/waypoint/allow-get.yaml` can be included in the waypoint base to test
 Layer 7 enforcement, but affects all traffic using that waypoint. This lab does
 not block other external destinations or enforce a mandatory cluster exit path.
+
+## Tracing: Istio → Alloy → Tempo → Grafana
+
+The ops ApplicationSet manages these namespace/chart folders:
+
+- `addons/kiali-system/kiali-operator`: operator moved from `istio-system`;
+  the Kiali server and CR remain in `istio-system`.
+- `addons/tempo/tempo`: single-binary Tempo with a 5Gi PVC and 24-hour retention.
+- `addons/grafana/grafana`: Grafana with a 2Gi PVC, provisioned Tempo datasource
+  (`uid: tempo`), and the existing Prometheus datasource.
+- `addons/alloy/alloy`: one collector Deployment receiving OTLP gRPC on 4317 and
+  HTTP on 4318, batching traces, then exporting to `tempo.tempo:4317`.
+
+Istiod's Helm values enable tracing and register the `alloy` OpenTelemetry
+extension provider. A root-namespace Telemetry resource enables 100% sampling
+for this lab. Gateway and waypoint Envoy proxies export spans to Alloy; ztunnel
+provides Layer 4 telemetry and does not generate HTTP spans.
+
+Bookinfo's dev overlay now creates its own waypoint. The dev ApplicationSet
+labels its managed namespaces with `istio.io/use-waypoint: waypoint` and
+`istio.io/ingress-use-waypoint: true`. Istiod enables ingress waypoint routing,
+so Bookinfo requests entering through the shared ingress also traverse the
+Bookinfo waypoint. Internal calls get L7 tracing without application sidecars.
+Applications must propagate trace headers to join calls into one distributed
+trace; proxy instrumentation alone does not instrument application code.
+
+Grafana uses anonymous Viewer access and disables creation of the initial admin
+account for this local lab. No Grafana credentials are stored in Git. Access it
+with a local port-forward:
+
+```bash
+kubectl -n grafana port-forward svc/grafana 3000:80
+```
+
+Open `http://localhost:3000`, go to Explore, select Tempo, and search recent traces.
+Generate requests through `http://localhost:8080/productpage` using the existing
+shared ingress port-forward. Kiali's Traces view also queries the Tempo HTTP API.
+
+```bash
+kubectl -n kiali-system get pods
+kubectl -n tempo get pods,pvc
+kubectl -n grafana get pods,pvc
+kubectl -n alloy get pods,svc
+kubectl -n bookinfo get gateway waypoint
+kubectl -n alloy logs deployment/alloy --since=5m
+```
+
+The Kiali operator migration keeps its Argo CD Application name
+`kiali-operator-ops`. Once Git sync changes its destination to `kiali-system`,
+Argo CD prunes the former operator Deployment and ServiceAccount from
+`istio-system`, preserving the Kiali CR and the cluster-scoped CRD. A default
+StorageClass is required for the Tempo and Grafana PVCs.
