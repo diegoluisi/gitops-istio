@@ -335,7 +335,7 @@ Bookinfo waypoint. Internal calls get L7 tracing without application sidecars.
 Applications must propagate trace headers to join calls into one distributed
 trace; proxy instrumentation alone does not instrument application code.
 
-Grafana uses anonymous Viewer access and disables creation of the initial admin
+Grafana uses anonymous Editor access (including Explore and dashboard editing) and disables creation of the initial admin
 account for this local lab. No Grafana credentials are stored in Git. Access it
 with a local port-forward:
 

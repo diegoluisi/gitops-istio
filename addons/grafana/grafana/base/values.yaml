@@ -2,7 +2,7 @@ fullnameOverride: grafana
 persistence:
   enabled: true
   size: 2Gi
-# No initial admin account is created; this lab uses anonymous Viewer access.
+# No initial admin account is created; this lab uses anonymous Editor access for Explore.
 env:
   GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: "true"
   GF_SECURITY_ADMIN_PASSWORD: unused-initial-admin-disabled
@@ -13,7 +13,7 @@ grafana.ini:
     serve_from_sub_path: true
   auth.anonymous:
     enabled: true
-    org_role: Viewer
+    org_role: Editor
   analytics:
     reporting_enabled: false
     check_for_updates: false
