@@ -4,8 +4,9 @@ GitOps for Istio ICA Tests
 ## Istio addons
 
 The Autopilot `root` Application reads `projects/addons.yaml`, which defines the
-`addons` AppProject and an ApplicationSet using the Git **file** generator.
-It matches `addons/*/*/overlays/ops/config.yaml` and generates one Application
+`addons` AppProject and the cluster-specific `ops` ApplicationSet using the Git
+**file** generator.
+It matches `addons/**/**/overlays/ops/config.yaml` and generates one Application
 per addon targeting the `ops` cluster (currently Docker Desktop / in-cluster).
 The gateway chart renders separate ingress and egress releases in `istio-gateways`.
 
@@ -34,8 +35,9 @@ addons/
         kustomization.yaml
 ```
 
-Each overlay's `config.yaml` supplies the Application name, cluster label, and
-Kubernetes API server. The generator derives the destination namespace from the
+Each overlay's `config.yaml` supplies the base Application name and Kubernetes
+API server. The `ops` ApplicationSet appends `-ops` to every Application name and
+sets its cluster label to `ops`. The generator derives the destination namespace from the
 first folder under `addons/` (`{{ index .path.segments 1 }}`), and the source path
 from the configuration file's directory. These files are generator inputs, not Kubernetes
 resources, and are not included in the overlay's Kustomization.
@@ -75,14 +77,21 @@ kubectl kustomize addons/istio-gateways/gateway/overlays/ops --enable-helm
 
 Commit and push these changes to the branch watched by Argo CD. Let `argo-cd`
 sync the Kustomize build option before the generated Applications switch sources.
-Then `root` discovers the AppProject and ApplicationSet, and the file generator
-creates five Applications (`istio-base`, `istiod`, `istio-cni`, `ztunnel`, and
-`istio-gateways`). The generator reads Git,
-so applying the ApplicationSet locally before pushing these files will not
-migrate the running Applications. The initial live `istio-gateways` Application
-uses the same two Helm releases in the `default` project until this Git update is
-pushed; the ApplicationSet then adopts it and switches it to the Kustomize source
-and `addons` project.
+Then `root` discovers the AppProject and `ops` ApplicationSet. The file generator
+creates `istio-base-ops`, `istiod-ops`, `istio-cni-ops`, `ztunnel-ops`, and
+`istio-gateways-ops`. The generator reads Git, so local edits must be pushed before
+they affect reconciliation.
+
+For another cluster, create a separate ApplicationSet named after that cluster,
+match its `overlays/<cluster>/config.yaml` files, and use `-<cluster>` as its
+Application suffix. Set the destination server in each overlay's configuration
+and register/allow that server in Argo CD and the AppProject.
+
+Renaming the existing `addons` ApplicationSet and its Applications is a migration,
+not an in-place Kubernetes rename. Retire the old Applications while preserving
+their workloads before allowing the new names to reconcile, to avoid concurrent
+controllers managing the same resources. `preserveResourcesOnDeletion: true`
+keeps workloads when the old ApplicationSet is removed.
 
 ```bash
 kubectl -n argocd get applicationsets,applications
