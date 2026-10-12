@@ -1,4 +1,3 @@
 appName: istio-base
-namespace: istio-system
 cluster: ops
 server: https://kubernetes.default.svc

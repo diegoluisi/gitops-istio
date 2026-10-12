@@ -32,9 +32,10 @@ addons/
         kustomization.yaml
 ```
 
-Each overlay's `config.yaml` supplies the Application name, namespace, cluster
-label, and Kubernetes API server. The generator derives the source path from the
-configuration file's directory. These files are generator inputs, not Kubernetes
+Each overlay's `config.yaml` supplies the Application name, cluster label, and
+Kubernetes API server. The generator derives the destination namespace from the
+first folder under `addons/` (`{{ index .path.segments 1 }}`), and the source path
+from the configuration file's directory. These files are generator inputs, not Kubernetes
 resources, and are not included in the overlay's Kustomization.
 
 Shared bases render the official Istio Helm charts, pinned to `1.30.3`, with
