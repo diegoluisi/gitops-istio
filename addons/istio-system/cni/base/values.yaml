@@ -1,1 +1,2 @@
-profile: ambient
+ambient:
+  enabled: false

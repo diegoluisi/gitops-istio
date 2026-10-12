@@ -1,0 +1,39 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: httpbin-egress
+spec:
+  hosts: [httpbin.org]
+  exportTo: [".", istio-gateways]
+  gateways: [mesh, istio-gateways/bookinfo-egress]
+  http:
+    - match:
+        - gateways: [mesh]
+          port: 80
+      route:
+        - destination:
+            host: istio-egressgateway.istio-gateways.svc.cluster.local
+            port:
+              number: 80
+    - match:
+        - gateways: [istio-gateways/bookinfo-egress]
+          port: 80
+      route:
+        - destination:
+            host: httpbin.org
+            port:
+              number: 80
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: httpbin-egress-gateway
+spec:
+  host: istio-egressgateway.istio-gateways.svc.cluster.local
+  exportTo: ["."]
+  trafficPolicy:
+    portLevelSettings:
+      - port:
+          number: 80
+        tls:
+          mode: ISTIO_MUTUAL

@@ -1,4 +1,3 @@
-profile: ambient
 meshConfig:
   accessLogFile: /dev/stdout
   enableTracing: true
@@ -7,8 +6,8 @@ meshConfig:
       opentelemetry:
         service: alloy.alloy.svc.cluster.local
         port: 4317
-pilot:
-  env:
-    ENABLE_INGRESS_WAYPOINT_ROUTING: "true"
 sidecarInjectorWebhook:
   enableNamespacesByDefault: false
+global:
+  istio_cni:
+    enabled: true

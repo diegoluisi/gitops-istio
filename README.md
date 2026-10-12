@@ -1,6 +1,10 @@
 # gitops-istio
 GitOps for Istio ICA Tests
 
+The current manifests use **sidecar mode**. See [the migration guide](docs/sidecar-migration.md)
+for deployment order and verification. Older ambient walkthroughs below describe
+the previous lab configuration; waypoint and ztunnel resources have been retired.
+
 ## Istio addons
 
 The Autopilot `root` Application reads `projects/addons.yaml`, which defines the
@@ -21,8 +25,7 @@ addons/
         ops/
           kustomization.yaml
     istiod/                  # same base/ and overlays/ops/ layout
-    cni/                     # ambient CNI node agent
-    ztunnel/                 # ambient node proxy
+    cni/                     # sidecar traffic setup
   istio-gateways/
     gateway/
       base/
@@ -46,10 +49,9 @@ Shared bases render the official Istio Helm charts, pinned to `1.30.3`, with
 is in Helm values, without Kustomize patches: ingress uses NodePort for the local
 lab, and egress uses ClusterIP. Their `istio: ingressgateway` and
 `istio: egressgateway` labels support selectors in Istio Gateway resources.
-The installation uses ambient mode: base CRDs, istiod with `profile: ambient`,
-Istio CNI with `profile: ambient`, and the ztunnel DaemonSet. All components use
-version `1.30.3`. Workload traffic is redirected to ztunnel without an application
-sidecar. Ingress and egress remain standalone Envoy gateway deployments.
+The installation uses sidecar mode: base CRDs, istiod with CNI integration,
+and Istio CNI with ambient disabled. All components use version `1.30.3`.
+Application namespaces enable injection and each application pod gets an Envoy sidecar. Ingress and egress remain standalone Envoy gateway deployments.
 Argo CD creates `istio-gateways` through `CreateNamespace=true`. Gateway pods opt
 into gateway injection through the chart's pod annotations; the namespace does
 not need a general sidecar-injection label.

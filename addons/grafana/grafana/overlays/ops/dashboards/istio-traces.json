@@ -6,7 +6,7 @@
   "editable": false,
   "tags": [
     "istio",
-    "ambient",
+    "sidecar",
     "tempo",
     "gitops"
   ],
@@ -63,7 +63,7 @@
       },
       "options": {
         "mode": "markdown",
-        "content": "Filter by **service name regex** (for example `.*bookinfo.*`). Select **View span waterfall** on a result, or paste a Trace ID above. Slow traces match a span exceeding the threshold; error traces match a span with error status. Generate traffic to `/productpage` or `/details/1` and refresh. Istio traces are emitted by Envoy gateways and waypoints; ztunnel provides L4 metrics. Tempo retains traces for 24 hours."
+        "content": "Filter by **service name regex** (for example `.*bookinfo.*`). Select **View span waterfall** on a result, or paste a Trace ID above. Slow traces match a span exceeding the threshold; error traces match a span with error status. Generate traffic to `/productpage` or `/details/1` and refresh. Istio traces are emitted by Envoy sidecars and gateways. Tempo retains traces for 24 hours."
       }
     },
     {

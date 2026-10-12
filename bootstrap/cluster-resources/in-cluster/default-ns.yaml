@@ -3,6 +3,4 @@ kind: Namespace
 metadata:
   name: default
   labels:
-    istio.io/dataplane-mode: ambient
-    istio-injection: disabled
-    istio.io/use-waypoint: waypoint
+    istio-injection: enabled

@@ -1,16 +1,16 @@
 {
   "uid": "istio-ambient-overview",
-  "title": "Istio Ambient Metrics",
+  "title": "Istio Sidecar Metrics",
   "schemaVersion": 39,
   "version": 1,
   "editable": false,
   "tags": [
     "istio",
-    "ambient",
+    "sidecar",
     "mimir",
     "gitops"
   ],
-  "description": "Metrics collected by Alloy and stored in Mimir. HTTP series require Envoy waypoints; TCP series come from ztunnel. Separate reporter series avoid summing multiple observation points.",
+  "description": "Metrics collected from Istio sidecars and gateways by Alloy and stored in Mimir. Reporter series identify each observation point.",
   "refresh": "15s",
   "time": {
     "from": "now-15m",

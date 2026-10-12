@@ -3,6 +3,9 @@ kind: Kustomization
 namespace: bookstore
 resources:
   - ../../base
+  - peer-authentication.yaml
   - virtualservice.yaml
-  - waypoint.yaml
+
   - namespace.yaml
+transformers:
+  - sidecar-rollout.yaml
