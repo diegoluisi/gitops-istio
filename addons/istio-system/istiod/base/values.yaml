@@ -8,6 +8,6 @@ meshConfig:
         port: 4317
 sidecarInjectorWebhook:
   enableNamespacesByDefault: false
-global:
-  istio_cni:
+pilot:
+  cni:
     enabled: true
