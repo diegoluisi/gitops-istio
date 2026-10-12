@@ -8,6 +8,9 @@ env:
   GF_SECURITY_ADMIN_PASSWORD: unused-initial-admin-disabled
   GF_AUTH_DISABLE_LOGIN_FORM: "true"
 grafana.ini:
+  server:
+    root_url: http://localhost:8080/grafana/
+    serve_from_sub_path: true
   auth.anonymous:
     enabled: true
     org_role: Viewer

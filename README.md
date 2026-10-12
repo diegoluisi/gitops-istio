@@ -343,7 +343,7 @@ with a local port-forward:
 kubectl -n grafana port-forward svc/grafana 3000:80
 ```
 
-Open `http://localhost:3000`, go to Explore, select Tempo, and search recent traces.
+Open `http://localhost:3000/grafana/`, go to Explore, select Tempo, and search recent traces.
 Generate requests through `http://localhost:8080/productpage` using the existing
 shared ingress port-forward. Kiali's Traces view also queries the Tempo HTTP API.
 
@@ -364,3 +364,9 @@ CRD. Existing Bookinfo namespace enrollment is also enforced by an explicit
 Namespace manifest. Waypoint tracing uses a root Telemetry policy targeting the
 `istio-waypoint` GatewayClass. A default
 StorageClass is required for the Tempo and Grafana PVCs.
+
+Grafana is also exposed through `istio-gateways/shared-ingress` at
+`http://localhost:8080/grafana/`. Its ops VirtualService preserves the subpath;
+Helm values set `server.root_url` and `serve_from_sub_path` so assets, API calls,
+and redirects use `/grafana/`. The public URL is configured for the local ingress
+port-forward on 8080; update `root_url` when deploying to a real hostname.
