@@ -1,0 +1,3 @@
+appName: ztunnel
+cluster: ops
+server: https://kubernetes.default.svc

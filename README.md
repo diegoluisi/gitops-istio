@@ -21,6 +21,8 @@ addons/
           config.yaml
           kustomization.yaml
     istiod/                  # same base/ and overlays/ops/ layout
+    cni/                     # ambient CNI node agent
+    ztunnel/                 # ambient node proxy
   istio-gateways/
     gateway/
       base/
@@ -43,7 +45,10 @@ Shared bases render the official Istio Helm charts, pinned to `1.30.3`, with
 is in Helm values, without Kustomize patches: ingress uses NodePort for the local
 lab, and egress uses ClusterIP. Their `istio: ingressgateway` and
 `istio: egressgateway` labels support selectors in Istio Gateway resources.
-The installation uses sidecar mode: base CRDs, istiod, ingress and egress gateways.
+The installation uses ambient mode: base CRDs, istiod with `profile: ambient`,
+Istio CNI with `profile: ambient`, and the ztunnel DaemonSet. All components use
+version `1.30.3`. Workload traffic is redirected to ztunnel without an application
+sidecar. Ingress and egress remain standalone Envoy gateway deployments.
 Argo CD creates `istio-gateways` through `CreateNamespace=true`. Gateway pods opt
 into gateway injection through the chart's pod annotations; the namespace does
 not need a general sidecar-injection label.
@@ -63,13 +68,16 @@ Validate each overlay locally (requires Helm and access to the chart repository)
 ```bash
 kubectl kustomize addons/istio-system/base/overlays/ops --enable-helm
 kubectl kustomize addons/istio-system/istiod/overlays/ops --enable-helm
+kubectl kustomize addons/istio-system/cni/overlays/ops --enable-helm
+kubectl kustomize addons/istio-system/ztunnel/overlays/ops --enable-helm
 kubectl kustomize addons/istio-gateways/gateway/overlays/ops --enable-helm
 ```
 
 Commit and push these changes to the branch watched by Argo CD. Let `argo-cd`
 sync the Kustomize build option before the generated Applications switch sources.
 Then `root` discovers the AppProject and ApplicationSet, and the file generator
-creates the three Applications (`istio-base`, `istiod`, and `istio-gateways`). The generator reads Git,
+creates five Applications (`istio-base`, `istiod`, `istio-cni`, `ztunnel`, and
+`istio-gateways`). The generator reads Git,
 so applying the ApplicationSet locally before pushing these files will not
 migrate the running Applications. The initial live `istio-gateways` Application
 uses the same two Helm releases in the `default` project until this Git update is
@@ -83,14 +91,40 @@ kubectl -n istio-gateways get pods,svc
 kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
 ```
 
-To inject sidecars into lab workloads, label their namespace before creating pods:
+The `default` namespace is enrolled declaratively by
+`bootstrap/cluster-resources/in-cluster/default-ns.yaml`, with
+`istio.io/dataplane-mode: ambient` and `istio-injection: disabled`.
+Infrastructure namespaces (`argocd`, `istio-system`, `istio-gateways`, and
+`kube-system`) are not enrolled. For another application namespace:
 
 ```bash
-kubectl label namespace <lab-namespace> istio-injection=enabled --overwrite
+kubectl label namespace <lab-namespace> istio-injection=disabled --overwrite
+kubectl label namespace <lab-namespace> istio.io/rev-
+kubectl label namespace <lab-namespace> istio.io/dataplane-mode=ambient --overwrite
 ```
 
-Restart existing pods to receive a sidecar. The Istio system namespace itself is
-not labeled for injection. Change `service.type` in `gateway/base/ingress/values.yaml` to use a LoadBalancer
+Also remove workload-level injection labels/annotations and revision labels when
+migrating existing workloads. Existing sidecar pods must be recreated after
+removing injection settings; adding an ambient label alone does not remove their
+sidecars. Pods already running without sidecars can enroll without a restart.
+Do not disable the gateway chart's gateway-template injection: it constructs a
+standalone gateway proxy, not a sidecar added to an application pod.
+
+Verify the ambient components after Git sync:
+
+```bash
+kubectl -n istio-system rollout status deployment/istiod
+kubectl -n istio-system rollout status daemonset/istio-cni-node
+kubectl -n istio-system rollout status daemonset/ztunnel
+kubectl get namespace default --show-labels
+kubectl -n default get pods -o custom-columns='NAME:.metadata.name,CONTAINERS:.spec.containers[*].name'
+```
+
+Application pods should have only their application containers. For HTTP routing
+and Layer 7 authorization inside the ambient mesh, add a shared waypoint and the
+Gateway API CRDs when needed; neither is required for ztunnel's Layer 4 mesh.
+
+Change `service.type` in `gateway/base/ingress/values.yaml` to use a LoadBalancer
 on clusters that provide one. Installing an egress gateway does not route outbound
 traffic through it automatically; configure Gateway, VirtualService, and
 ServiceEntry resources for the corresponding lab.

@@ -1,2 +1,5 @@
+profile: ambient
 meshConfig:
   accessLogFile: /dev/stdout
+sidecarInjectorWebhook:
+  enableNamespacesByDefault: false
