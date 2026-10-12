@@ -1,0 +1,17 @@
+apiVersion: kiali.io/v1alpha1
+kind: Kiali
+metadata:
+  name: kiali
+spec:
+  istio_namespace: istio-system
+  auth:
+    strategy: anonymous
+  deployment:
+    view_only_mode: true
+  external_services:
+    prometheus:
+      url: http://prometheus.istio-system.svc.cluster.local:9090
+    grafana:
+      enabled: false
+    tracing:
+      enabled: false

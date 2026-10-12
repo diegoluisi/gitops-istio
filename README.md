@@ -244,3 +244,35 @@ curl http://localhost:8080/productpage
 This dev lab uses wildcard hosts and HTTP. Configure specific hosts and TLS when
 exposing it outside the local lab. A real dev cluster needs its own shared ingress
 Gateway and ingress pods; these cross-namespace references stay within one cluster.
+
+## Kiali traffic visualization
+
+The ops directory generator discovers `kiali-operator-ops`, `kiali-ops`, and
+`prometheus-ops`. Kiali Operator `2.26.0` manages the Kiali instance in
+`istio-system`; Prometheus uses the official Istio `1.30.3` sample addon with
+Istio telemetry scraping. This is a lab metrics backend with ephemeral storage.
+Kiali is read-only, with anonymous authentication for local port-forward access.
+Grafana and tracing integrations are disabled because those services are not
+installed. No shared-ingress route exposes Kiali.
+
+```bash
+kubectl -n istio-system port-forward svc/kiali 20001:20001
+```
+
+Open `http://localhost:20001/kiali`, select `bookinfo` in Traffic Graph, enable TCP
+traffic, and use a recent time window (for example, Last 5 minutes). Generate
+requests through the ingress in another terminal:
+
+```bash
+kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# In another terminal:
+for i in $(seq 1 60); do
+  curl -fsS http://localhost:8080/productpage > /dev/null
+  sleep 1
+done
+```
+
+Allow a few Prometheus scrape intervals for graph edges to appear. Ztunnel reports
+ambient traffic as TCP. HTTP metrics for service-to-service requests require a
+waypoint in the application's namespace; the waypoint in `default` does not
+serve `bookinfo`. The shared ingress itself also emits HTTP metrics.
