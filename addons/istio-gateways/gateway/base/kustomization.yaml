@@ -13,3 +13,5 @@ helmCharts:
     releaseName: istio-egressgateway
     namespace: istio-gateways
     valuesFile: egress/values.yaml
+resources:
+  - shared-gateway.yaml

@@ -216,3 +216,31 @@ kubectl -n bookinfo port-forward svc/productpage 9080:9080
 Open `http://localhost:9080/productpage`. Bookinfo needs the ambient components
 installed in the destination cluster; a real dev cluster needs its own Istio
 installation.
+
+## Shared ingress
+
+`addons/istio-gateways/gateway/base/shared-gateway.yaml` defines one Istio
+`networking.istio.io/v1` Gateway named `shared-ingress`. It selects the existing
+`istio: ingressgateway` pods and accepts HTTP on port 80. It is independent of
+the ambient waypoint Gateway.
+
+Applications define their own VirtualServices in their namespaces and reference
+`istio-gateways/shared-ingress`. Bookinfo's dev overlay exposes `/details`
+(rewritten to `/details/0`), `/details/<id>`, and `/productpage` with its supporting
+static, login, logout, and API paths. Adding another application requires its
+VirtualService with non-overlapping paths or a separate hostname; no additional
+ingress Deployment is needed.
+
+After Git sync:
+
+```bash
+kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# In another terminal:
+curl http://localhost:8080/details
+curl http://localhost:8080/details/0
+curl http://localhost:8080/productpage
+```
+
+This dev lab uses wildcard hosts and HTTP. Configure specific hosts and TLS when
+exposing it outside the local lab. A real dev cluster needs its own shared ingress
+Gateway and ingress pods; these cross-namespace references stay within one cluster.
