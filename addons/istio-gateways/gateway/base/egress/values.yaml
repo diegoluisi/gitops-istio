@@ -1,0 +1,5 @@
+name: istio-egressgateway
+labels:
+  istio: egressgateway
+service:
+  type: ClusterIP

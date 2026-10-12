@@ -1,4 +1,0 @@
-appName: istio-ingressgateway
-namespace: istio-system
-cluster: ops
-server: https://kubernetes.default.svc

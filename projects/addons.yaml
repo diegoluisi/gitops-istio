@@ -13,6 +13,8 @@ spec:
   destinations:
     - server: https://kubernetes.default.svc
       namespace: istio-system
+    - server: https://kubernetes.default.svc
+      namespace: istio-gateways
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

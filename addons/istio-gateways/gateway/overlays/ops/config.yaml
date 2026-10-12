@@ -1,0 +1,4 @@
+appName: istio-gateways
+namespace: istio-gateways
+cluster: ops
+server: https://kubernetes.default.svc
