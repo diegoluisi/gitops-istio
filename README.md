@@ -182,3 +182,37 @@ Waypoint authorization uses `targetRefs`, not workload selectors. For a specific
 Service, attach the policy to that Service instead. Policies only enforce traffic
 that reaches the waypoint; pair with Layer 4 authorization if bypass prevention
 is required.
+
+## Simulated dev cluster: Bookinfo
+
+`projects/dev.yaml` defines the `dev` AppProject and ApplicationSet. Its Git
+directory generator matches `apps/*/overlays/dev`. For
+`apps/bookinfo/overlays/dev`, folder names generate:
+
+- Application: `bookinfo-dev`
+- Namespace: `bookinfo`
+- Cluster label: `dev`
+
+This simulates dev on the same Kubernetes API server as ops
+(`https://kubernetes.default.svc`); it does not create a separate cluster. For a
+real dev cluster, register it in Argo CD and update both the project destination
+and the ApplicationSet destination server.
+
+Bookinfo's base references the official sample pinned to Istio `1.30.3`. Its dev
+overlay sets the namespace. Argo CD creates `bookinfo` and labels it for ambient
+mode with sidecar injection disabled. This namespace does not inherit the
+`default` namespace's waypoint: add a waypoint and enrollment in `bookinfo` when
+you need Layer 7 processing there.
+
+After pushing and Git reconciliation:
+
+```bash
+kubectl -n argocd get applicationset dev
+kubectl -n argocd get application bookinfo-dev
+kubectl -n bookinfo get pods,svc
+kubectl -n bookinfo port-forward svc/productpage 9080:9080
+```
+
+Open `http://localhost:9080/productpage`. Bookinfo needs the ambient components
+installed in the destination cluster; a real dev cluster needs its own Istio
+installation.

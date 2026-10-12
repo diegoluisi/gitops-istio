@@ -1,0 +1,72 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Applications for the simulated dev cluster
+  sourceRepos:
+    - https://github.com/diegoluisi/gitops-istio.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: bookinfo
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: dev
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - git:
+        repoURL: https://github.com/diegoluisi/gitops-istio.git
+        revision: HEAD
+        requeueAfterSeconds: 20
+        directories:
+          - path: apps/*/overlays/dev
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  template:
+    metadata:
+      name: '{{ index .path.segments 1 }}-{{ .path.basename }}'
+      namespace: argocd
+      labels:
+        app.kubernetes.io/part-of: apps
+        cluster: '{{ .path.basename }}'
+    spec:
+      project: dev
+      source:
+        repoURL: https://github.com/diegoluisi/gitops-istio.git
+        targetRevision: HEAD
+        path: '{{ .path.path }}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ index .path.segments 1 }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        managedNamespaceMetadata:
+          labels:
+            istio.io/dataplane-mode: ambient
+            istio-injection: disabled
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        retry:
+          limit: 10
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
