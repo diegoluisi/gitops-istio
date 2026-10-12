@@ -3,10 +3,10 @@ kind: Kustomization
 namespace: bookinfo
 resources:
   - ../../base
+  - authorization-policy.yaml
+  - egress-waypoint.yaml
+  - namespace.yaml
+  - networkpolicy.yaml
+  - service-entry.yaml
   - virtualservice.yaml
   - waypoint.yaml
-  - namespace.yaml
-  - httpbin-egress.yaml
-  - egress-waypoint.yaml
-  - egress-authorization.yaml
-  - networkpolicy.yaml
