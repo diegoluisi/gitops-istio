@@ -10,3 +10,4 @@ helmCharts:
     valuesFile: values.yaml
 resources:
   - telemetry.yaml
+  - waypoint-telemetry.yaml

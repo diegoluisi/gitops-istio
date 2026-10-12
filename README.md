@@ -358,6 +358,9 @@ kubectl -n alloy logs deployment/alloy --since=5m
 
 The Kiali operator migration keeps its Argo CD Application name
 `kiali-operator-ops`. Once Git sync changes its destination to `kiali-system`,
-Argo CD prunes the former operator Deployment and ServiceAccount from
-`istio-system`, preserving the Kiali CR and the cluster-scoped CRD. A default
+Retire the former operator Deployment and ServiceAccount from `istio-system`
+after the new operator is ready, preserving the Kiali CR and the cluster-scoped
+CRD. Existing Bookinfo namespace enrollment is also enforced by an explicit
+Namespace manifest. Waypoint tracing uses a root Telemetry policy targeting the
+`istio-waypoint` GatewayClass. A default
 StorageClass is required for the Tempo and Grafana PVCs.
