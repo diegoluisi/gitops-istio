@@ -419,3 +419,17 @@ The old Prometheus datasource is removed during Grafana provisioning. Existing
 Prometheus history is not migrated. Retire the old `prometheus-ops` Application
 and its server resources only after Mimir ingestion and Kiali/Grafana queries
 are verified; the ops ApplicationSet preserves resources on deletion.
+
+## Istio tracing dashboard
+
+The provisioned **Istio Traces** dashboard is defined in
+`addons/grafana/grafana/overlays/ops/dashboards/istio-traces.json` and appears
+under Grafana's **Istio** folder. Open `/grafana/d/istio-traces/` through the
+shared ingress. It queries the existing Tempo datasource for recent, slow,
+and error traces. Filter with a service-name regex such as `.*bookinfo.*` and
+change the slow-span threshold (default `100ms`). Select **View span waterfall**
+on a table result, or paste its Trace ID into the variable, to inspect its spans.
+The waterfall needs a selected Trace ID. Generate traffic to `/productpage` or
+`/details/1`, then refresh if no traces appear in the selected time range.
+Tempo retains traces for 24 hours. Slow/error tables match individual spans;
+Istio gateways and waypoints emit these traces, while ztunnel supplies L4 metrics.

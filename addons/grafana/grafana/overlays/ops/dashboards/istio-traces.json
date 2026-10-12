@@ -1,0 +1,226 @@
+{
+  "uid": "istio-traces",
+  "title": "Istio Traces",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "istio",
+    "ambient",
+    "tempo",
+    "gitops"
+  ],
+  "description": "Search Istio traces collected by Alloy and stored in Tempo, then inspect individual span waterfalls.",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "label": "Service name (regex)",
+        "type": "textbox",
+        "query": ".*",
+        "current": {
+          "text": ".*",
+          "value": ".*"
+        }
+      },
+      {
+        "name": "minDuration",
+        "label": "Slow span threshold",
+        "type": "textbox",
+        "query": "100ms",
+        "current": {
+          "text": "100ms",
+          "value": "100ms"
+        }
+      },
+      {
+        "name": "traceId",
+        "label": "Trace ID",
+        "type": "textbox",
+        "query": "",
+        "current": {
+          "text": "",
+          "value": ""
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "How to use",
+      "type": "text",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 3
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "Filter by **service name regex** (for example `.*bookinfo.*`). Select **View span waterfall** on a result, or paste a Trace ID above. Slow traces match a span exceeding the threshold; error traces match a span with error status. Generate traffic to `/productpage` or `/details/1` and refresh. Istio traces are emitted by Envoy gateways and waypoints; ztunnel provides L4 metrics. Tempo retains traces for 24 hours."
+      }
+    },
+    {
+      "id": 2,
+      "title": "Recent traces",
+      "type": "table",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 3,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name =~ \"${service:raw}\" }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "View span waterfall",
+              "url": "/grafana/d/istio-traces/istio-traces${__url_time_range}&var-service=${service:percentencode}&var-minDuration=${minDuration:percentencode}&var-traceId=${__data.fields.traceID}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 3,
+      "title": "Slow traces",
+      "type": "table",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name =~ \"${service:raw}\" && duration > ${minDuration:raw} }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "View span waterfall",
+              "url": "/grafana/d/istio-traces/istio-traces${__url_time_range}&var-service=${service:percentencode}&var-minDuration=${minDuration:percentencode}&var-traceId=${__data.fields.traceID}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 4,
+      "title": "Error traces",
+      "type": "table",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceql",
+          "query": "{ resource.service.name =~ \"${service:raw}\" && status = error }",
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "links": [
+            {
+              "title": "View span waterfall",
+              "url": "/grafana/d/istio-traces/istio-traces${__url_time_range}&var-service=${service:percentencode}&var-minDuration=${minDuration:percentencode}&var-traceId=${__data.fields.traceID}",
+              "targetBlank": false
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true
+      }
+    },
+    {
+      "id": 5,
+      "title": "Selected trace \u2014 span waterfall",
+      "type": "traces",
+      "datasource": {
+        "type": "tempo",
+        "uid": "tempo"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 21,
+        "w": 24,
+        "h": 14
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "tempo",
+            "uid": "tempo"
+          },
+          "queryType": "traceId",
+          "query": "${traceId:raw}"
+        }
+      ],
+      "options": {}
+    }
+  ]
+}

@@ -11,3 +11,4 @@ configMapGenerator:
         grafana_dashboard: "1"
     files:
       - istio-ambient.json=dashboards/istio-ambient.json
+      - istio-traces.json=dashboards/istio-traces.json
