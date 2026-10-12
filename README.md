@@ -5,8 +5,8 @@ GitOps for Istio ICA Tests
 
 The Autopilot `root` Application reads `projects/addons.yaml`, which defines the
 `addons` AppProject and the cluster-specific `ops` ApplicationSet using the Git
-**file** generator.
-It matches `addons/**/**/overlays/ops/config.yaml` and generates one Application
+**directory** generator.
+It matches `addons/*/*/overlays/ops` and generates one Application
 per addon targeting the `ops` cluster (currently Docker Desktop / in-cluster).
 The gateway chart renders separate ingress and egress releases in `istio-gateways`.
 
@@ -19,7 +19,6 @@ addons/
         values.yaml
       overlays/
         ops/
-          config.yaml
           kustomization.yaml
     istiod/                  # same base/ and overlays/ops/ layout
     cni/                     # ambient CNI node agent
@@ -31,16 +30,16 @@ addons/
         ingress/values.yaml
         egress/values.yaml
       overlays/ops/
-        config.yaml
         kustomization.yaml
 ```
 
-Each overlay's `config.yaml` supplies the base Application name and Kubernetes
-API server. The `ops` ApplicationSet appends `-ops` to every Application name and
-sets its cluster label to `ops`. The generator derives the destination namespace from the
-first folder under `addons/` (`{{ index .path.segments 1 }}`), and the source path
-from the configuration file's directory. These files are generator inputs, not Kubernetes
-resources, and are not included in the overlay's Kustomization.
+The generator discovers overlay folders directly; no `config.yaml` is needed.
+It derives the addon name from the chart folder (`{{ index .path.segments 2 }}`),
+the cluster label and Application suffix from the overlay folder
+(`{{ .path.basename }}`), and the destination namespace from the first folder
+under `addons/` (`{{ index .path.segments 1 }}`). The source path is the matched
+overlay directory (`{{ .path.path }}`). The `ops` ApplicationSet sets its
+Kubernetes API server once in `spec.template.spec.destination.server`.
 
 Shared bases render the official Istio Helm charts, pinned to `1.30.3`, with
 `values.yaml`. The `ops` overlays reference their bases. All gateway configuration
@@ -77,14 +76,14 @@ kubectl kustomize addons/istio-gateways/gateway/overlays/ops --enable-helm
 
 Commit and push these changes to the branch watched by Argo CD. Let `argo-cd`
 sync the Kustomize build option before the generated Applications switch sources.
-Then `root` discovers the AppProject and `ops` ApplicationSet. The file generator
-creates `istio-base-ops`, `istiod-ops`, `istio-cni-ops`, `ztunnel-ops`, and
-`istio-gateways-ops`. The generator reads Git, so local edits must be pushed before
+Then `root` discovers the AppProject and `ops` ApplicationSet. The directory generator
+creates `base-ops`, `istiod-ops`, `cni-ops`, `ztunnel-ops`,
+`gateway-ops`, `gateway-api-ops`, and `waypoint-ops`. The generator reads Git, so local edits must be pushed before
 they affect reconciliation.
 
 For another cluster, create a separate ApplicationSet named after that cluster,
-match its `overlays/<cluster>/config.yaml` files, and use `-<cluster>` as its
-Application suffix. Set the destination server in each overlay's configuration
+match its `overlays/<cluster>` folders. The folder name automatically
+sets the cluster label and Application suffix. Set that ApplicationSet's destination server
 and register/allow that server in Argo CD and the AppProject.
 
 Renaming the existing `addons` ApplicationSet and its Applications is a migration,
@@ -138,10 +137,48 @@ on clusters that provide one. Installing an egress gateway does not route outbou
 traffic through it automatically; configure Gateway, VirtualService, and
 ServiceEntry resources for the corresponding lab.
 
-To add another addon, create its base, an `overlays/ops/kustomization.yaml`, and a
-matching `overlays/ops/config.yaml`; no individual Application manifest is needed.
+To add another addon, create its base and an `overlays/ops/kustomization.yaml`.
+The directory generator discovers it automatically; no config or individual
+Application manifest is needed.
 
 When migrating the old `istio-ingressgateway` Application in `istio-system`, wait
 until both new gateways are healthy before removing the old Application and its
 workloads. The ApplicationSet preserves resources when an Application disappears
 from the generator, so migration cleanup is explicit.
+
+## GitOps waypoint for Layer 7
+
+`gateway-api-ops` manages the pinned Gateway API `v1.5.1` standard CRDs from
+`addons/istio-system/gateway-api`. `waypoint-ops` manages a Gateway in `default`
+from `addons/default/waypoint`. Both follow the base/overlays/ops structure and
+are discovered by the `ops` ApplicationSet. The Gateway uses the
+`istio-waypoint` class, HBONE listener on port 15008, and
+`istio.io/waypoint-for: service`. Istiod creates its Deployment and Service.
+
+The namespace manifest in `bootstrap/cluster-resources/in-cluster/default-ns.yaml`
+enrolls `default` using `istio.io/use-waypoint: waypoint`. Ambient traffic addressed
+to Services in this destination namespace passes through the shared waypoint,
+without adding sidecars to application pods. Direct Pod-IP traffic is outside
+this service-only waypoint's scope. Ingress-to-waypoint routing requires separate
+Istiod configuration and service enrollment.
+
+Push these manifests to enable reconciliation. The existing retry policy and
+`SkipDryRunOnMissingResource=true` allow waypoint sync to converge when the
+Gateway API CRDs arrive. Applications reconcile independently, so check the CRDs
+and waypoint readiness after sync:
+
+```bash
+kubectl -n argocd get applications gateway-api-ops waypoint-ops
+kubectl -n default wait gateway/waypoint --for=condition=Programmed --timeout=180s
+kubectl -n default rollout status deployment/waypoint
+kubectl get namespace default --show-labels
+```
+
+An optional GET-only L7 authorization example lives in
+`examples/waypoint/allow-get.yaml`. To manage it through GitOps, add it to the
+waypoint base directory and list it in that base's Kustomization. It is not enabled
+by default because it restricts HTTP methods for every Service using the waypoint.
+Waypoint authorization uses `targetRefs`, not workload selectors. For a specific
+Service, attach the policy to that Service instead. Policies only enforce traffic
+that reaches the waypoint; pair with Layer 4 authorization if bypass prevention
+is required.
