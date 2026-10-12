@@ -253,7 +253,10 @@ The ops directory generator discovers `kiali-operator-ops`, `kiali-ops`, and
 Istio telemetry scraping. This is a lab metrics backend with ephemeral storage.
 Kiali is read-only, with anonymous authentication for local port-forward access.
 Grafana and tracing integrations are disabled because those services are not
-installed. No shared-ingress route exposes Kiali.
+installed. The ops overlay routes `/kiali` and `/kiali/` through
+`istio-gateways/shared-ingress` to Kiali on port 20001, without rewriting the path.
+Using the ingress port-forward on port 8080, open `http://localhost:8080/kiali/`.
+Kiali retains anonymous, read-only access for this lab.
 
 ```bash
 kubectl -n istio-system port-forward svc/kiali 20001:20001

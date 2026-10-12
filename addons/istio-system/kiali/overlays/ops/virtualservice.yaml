@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: kiali-ingress
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - istio-gateways/shared-ingress
+  http:
+    - name: kiali
+      match:
+        - uri:
+            exact: /kiali
+        - uri:
+            prefix: /kiali/
+      route:
+        - destination:
+            host: kiali.istio-system.svc.cluster.local
+            port:
+              number: 20001
