@@ -37,3 +37,4 @@ spec:
           number: 80
         tls:
           mode: ISTIO_MUTUAL
+          sni: httpbin.org
