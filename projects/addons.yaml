@@ -16,8 +16,6 @@ spec:
     - server: https://kubernetes.default.svc
       namespace: istio-gateways
     - server: https://kubernetes.default.svc
-      namespace: default
-    - server: https://kubernetes.default.svc
       namespace: kiali-system
     - server: https://kubernetes.default.svc
       namespace: tempo

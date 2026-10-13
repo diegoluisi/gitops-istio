@@ -1,6 +1,6 @@
 # Ambient to sidecar migration
 
-Bookinfo, Bookstore, and default enable `istio-injection: enabled`. Istiod enables
+Bookinfo and Bookstore enable `istio-injection: enabled`. Istiod enables
 CNI integration; Istio CNI keeps configuring pod traffic but disables ambient.
 Bookinfo and Bookstore enforce STRICT mutual TLS. Their deployment templates
 have a migration annotation to trigger recreation with an injected `istio-proxy`.
@@ -23,7 +23,7 @@ NetworkPolicy permits external TCP 80 plus DNS, Istiod, and Alloy.
 ApplicationSets reconcile independently, so a Git commit is not a cross-application
 ordering guarantee. During deployment, wait for the sidecar-ready Istiod and CNI
 before rolling applications. Explicitly remove old ambient/waypoint labels from
-bookinfo, bookstore, and default if they remain live (for example from manual
+bookinfo and bookstore if they remain live (for example from manual
 labeling). Injection applies only to newly created pods. Verify every application
 pod has istio-proxy; restart deployments if necessary.
 
@@ -31,8 +31,9 @@ The ApplicationSet preserves resources on Application deletion. Removing the
 ztunnel and default waypoint folders does not automatically delete their live
 resources. Keep ztunnel until no ambient workloads remain, then remove its captured
 Argo-managed resources and the default waypoint Gateway. App-owned waypoints are
-pruned by their existing Applications. Never delete Gateway API CRDs merely because
-waypoints are removed; other resources may still use them.
+pruned by their existing Applications. Gateway API CRDs were subsequently removed after verifying that no Gateway API
+Gateways, routes, or ReferenceGrants remained. The active gateways use Istio CRDs.
+Injection is disabled in the unused default namespace.
 
 ## Validation
 
