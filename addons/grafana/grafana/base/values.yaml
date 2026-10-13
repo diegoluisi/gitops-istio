@@ -455,3 +455,5 @@ alerting:
                 type: last
                 params: []
               type: query
+deploymentStrategy:
+  type: Recreate
