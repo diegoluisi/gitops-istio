@@ -15,3 +15,5 @@ configMapGenerator:
       - istio-control-plane.json=dashboards/istio-control-plane.json
       - kubernetes-health.json=dashboards/kubernetes-health.json
       - istio-logs.json=dashboards/istio-logs.json
+      - istio-services.json=dashboards/istio-services.json
+      - istio-workloads.json=dashboards/istio-workloads.json

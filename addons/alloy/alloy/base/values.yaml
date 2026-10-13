@@ -62,9 +62,20 @@ alloy:
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_ip", "__meta_kubernetes_pod_annotation_prometheus_io_port"]
-          regex = "(.+);([0-9]+)"
+          regex = "([^:]+);([0-9]+)"
           replacement = "$1:$2"
           target_label = "__address__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip", "__meta_kubernetes_pod_annotation_prometheus_io_port"]
+          regex = "(.+:.*);([0-9]+)"
+          replacement = "[$1]:$2"
+          target_label = "__address__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          separator = "-"
+          target_label = "instance"
         }
         rule {
           source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
@@ -86,7 +97,7 @@ alloy:
       }
       prometheus.scrape "istio" {
         targets = discovery.relabel.istio_metrics.output
-        job_name = "istio"
+        job_name = "integrations/istio"
         scrape_interval = "15s"
         forward_to = [prometheus.remote_write.mimir.receiver]
       }
@@ -189,8 +200,8 @@ alloy:
       discovery.relabel "pod_logs" {
         targets = discovery.kubernetes.istio_pods.targets
         rule {
-          source_labels = ["__meta_kubernetes_namespace"]
-          regex = "bookinfo|bookstore|istio-system|istio-gateways|alloy|tempo|mimir|grafana|loki|kiali-system"
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          regex = "(bookinfo|bookstore|istio-system|istio-gateways|alloy|tempo|mimir|grafana|loki|kiali-system);.*|.*;istio-proxy"
           action = "keep"
         }
         rule {
@@ -206,16 +217,59 @@ alloy:
           target_label = "container"
         }
         rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          separator = "-"
+          target_label = "instance"
+        }
+        rule {
           target_label = "cluster"
           replacement = "ops"
         }
       }
       loki.source.kubernetes "pods" {
         targets = discovery.relabel.pod_logs.output
-        forward_to = [loki.write.default.receiver]
+        forward_to = [loki.process.classify.receiver]
       }
       loki.write "default" {
         endpoint {
           url = "http://loki.loki.svc.cluster.local:3100/loki/api/v1/push"
+        }
+      }
+
+      loki.process "classify" {
+        forward_to = [loki.write.default.receiver]
+        stage.match {
+          selector = "{container=\"istio-proxy\"}"
+          stage.static_labels {
+            values = { job = "integrations/istio" }
+          }
+          stage.match {
+            selector = "{container=\"istio-proxy\"} |~ \"^\\\\[\""
+            stage.regex {
+              expression = `^\[[^]]+\] "(?P<request_method>[^ ]+) [^ ]+ (?P<protocol>[^" ]+)" (?P<response_code>[0-9]{3}) `
+            }
+            stage.labels {
+              values = { request_method = "", protocol = "", response_code = "" }
+            }
+            stage.static_labels {
+              values = { log_type = "access" }
+            }
+          }
+          stage.match {
+            selector = "{container=\"istio-proxy\"} !~ \"^\\\\[\""
+            stage.multiline {
+              firstline = `^\d{4}-\d{2}-\d{2}T`
+              max_wait_time = "3s"
+            }
+            stage.regex {
+              expression = `^\S+\s+(?P<level>debug|info|warn|warning|error|critical)\s+`
+            }
+            stage.labels {
+              values = { level = "" }
+            }
+            stage.static_labels {
+              values = { log_type = "system" }
+            }
+          }
         }
       }

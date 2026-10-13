@@ -34,5 +34,38 @@ provide application-internal spans. Application code instrumentation remains a
 separate change to the sample applications.
 
 This is a local study setup with one Alloy instance. Scaling service graph processing
-requires routing all spans of a trace to the same processor. No alerting is installed
-by this change. Existing Mimir/Tempo retention remains 7 days / 24 hours.
+requires routing all spans of a trace to the same processor. Grafana-managed Istio alert rules are now provisioned as described below. Existing Mimir/Tempo retention remains 7 days / 24 hours.
+
+## Grafana Istio integration alignment
+
+Reference: https://grafana.com/docs/grafana-cloud/observe-and-act/monitor-infrastructure/integrations/integration-reference/integration-istio/
+
+This installation implements the guide's collection conventions with self-hosted
+Alloy, Mimir, Loki and Grafana rather than installing a Grafana Cloud integration.
+Istio metrics use job=integrations/istio and instance=<namespace>-<pod>, with cluster,
+namespace and pod retained. Discovery honors the actual Prometheus path/port
+annotations and handles IPv4/IPv6. It limits targets to the monitoring ports,
+avoiding duplicate scrapes of each proxy's other declared ports. Access logs are
+already enabled through Istiod meshConfig.accessLogFile=/dev/stdout.
+
+Proxy logs across namespaces use the same integration job/instance conventions.
+The pipeline distinguishes access/system logs, extracts HTTP method, protocol,
+response code and system severity, and joins multiline system messages. Other
+application/observability logs remain available without proxy parsing.
+
+The local dashboards provide system/control-plane, service, workload and log
+views equivalent in purpose to the guide; they are custom GitOps dashboards, not
+Grafana Cloud's bundled dashboard exports. No allowlist drops Istio metrics.
+
+Seven Grafana-managed rules are file-provisioned under Istio/istio-integration:
+latency, configuration validation, listener conflicts, xDS rejections, HTTP errors,
+gRPC errors and missing/down scrape targets. The documentation names these alerts
+but does not publish their expressions/thresholds. Local thresholds are p95>500ms,
+HTTP/gRPC error ratio>5%, configuration errors/conflicts>0, and scrape failure;
+conditions must persist for 5 minutes. The gRPC rule counts server-side status
+codes 2,4,8,13,14,15. Classic conditions aggregate alert instances per rule.
+Error counters may not exist until an error occurs or may vary by Istio version;
+no-data is OK for these rules, while the scrape rule explicitly detects total
+absence. Legacy galley_validation_failed is collected if Istiod exposes it.
+Notifications are not configured: add a real Grafana contact point before expecting
+email/chat delivery. The rules are visible in Grafana Alerting.

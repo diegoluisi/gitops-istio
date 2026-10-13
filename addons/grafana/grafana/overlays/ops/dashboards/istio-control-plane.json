@@ -34,7 +34,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "up{job=\"istio\",namespace=\"istio-system\"}",
+          "expr": "up{job=\"integrations/istio\",namespace=\"istio-system\"}",
           "legendFormat": "{{namespace}} {{pod}} {{deployment}} {{node}} {{type}} {{destination_service_name}}"
         }
       ],

@@ -68,3 +68,390 @@ sidecar:
       folder: Istio
       disableDelete: false
       allowUiUpdates: false
+alerting:
+  istio-rules.yaml:
+    apiVersion: 1
+    groups:
+    - orgId: 1
+      name: istio-integration
+      folder: Istio
+      interval: 1m
+      rules:
+      - uid: istio-latency
+        title: IstioHighRequestLatencyWarning
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: istio
+        annotations:
+          summary: HTTP p95 latency exceeds 500 ms for 5 minutes.
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: histogram_quantile(0.95, sum by (le, destination_service_name, destination_workload_namespace)
+              (rate(istio_request_duration_milliseconds_bucket{job="integrations/istio",reporter="destination"}[5m])))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 500
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: istio-validation
+        title: IstioGalleyValidationFailuresWarning
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: istio
+        annotations:
+          summary: Istiod configuration validation failures detected; metric availability
+            depends on Istio version.
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(increase(galley_validation_failed{job="integrations/istio"}[5m]))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: istio-listeners
+        title: IstioListenerConfigConflictsCritical
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: critical
+          integration: istio
+        annotations:
+          summary: Istio reports conflicting listener configuration.
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(pilot_conflict_inbound_listener{job="integrations/istio"}) +
+              sum(pilot_conflict_outbound_listener_tcp_over_current_tcp{job="integrations/istio"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: istio-xds
+        title: IstioXDSConfigRejectionsWarning
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: istio
+        annotations:
+          summary: Envoy rejected configuration delivered by Istiod.
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(increase(pilot_total_xds_rejects{job="integrations/istio"}[5m]))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: istio-http-errors
+        title: IstioHighHTTPRequestErrorsCritical
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: critical
+          integration: istio
+        annotations:
+          summary: HTTP 5xx exceeds 5% for 5 minutes.
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(rate(istio_requests_total{job="integrations/istio",reporter="destination",response_code=~"5.."}[5m]))
+              / clamp_min(sum(rate(istio_requests_total{job="integrations/istio",reporter="destination"}[5m])),
+              0.001)
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0.05
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: istio-grpc-errors
+        title: IstioHighGRPCRequestErrorsCritical
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: critical
+          integration: istio
+        annotations:
+          summary: Server-side gRPC failures exceed 5% for 5 minutes.
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(rate(istio_requests_total{job="integrations/istio",reporter="destination",request_protocol="grpc",grpc_response_status=~"2|4|8|13|14|15"}[5m]))
+              / clamp_min(sum(rate(istio_requests_total{job="integrations/istio",reporter="destination",request_protocol="grpc"}[5m])),
+              0.001)
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0.05
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: istio-metrics-down
+        title: IstioMetricsDown
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: critical
+          integration: istio
+        annotations:
+          summary: An Istio scrape target is down or all Istio targets are absent.
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: (up{job="integrations/istio"} == bool 0) or absent(up{job="integrations/istio"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query

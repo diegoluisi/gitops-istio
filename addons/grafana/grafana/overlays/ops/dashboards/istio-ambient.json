@@ -44,7 +44,7 @@
           "type": "prometheus",
           "uid": "mimir"
         },
-        "query": "label_values(up{job=\"istio\"}, namespace)",
+        "query": "label_values(up{job=\"integrations/istio\"}, namespace)",
         "refresh": 1,
         "includeAll": true,
         "allValue": ".*",
@@ -244,7 +244,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "up{job=\"istio\",namespace=~\"$scrape_namespace\"}",
+          "expr": "up{job=\"integrations/istio\",namespace=~\"$scrape_namespace\"}",
           "legendFormat": "{{namespace}} / {{pod}}"
         }
       ],
