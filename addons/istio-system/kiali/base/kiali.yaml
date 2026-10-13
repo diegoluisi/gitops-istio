@@ -1,3 +1,4 @@
+---
 apiVersion: kiali.io/v1alpha1
 kind: Kiali
 metadata:
@@ -17,7 +18,16 @@ spec:
         scrape_interval: 15s
         retention_period: 7d
     grafana:
-      enabled: false
+      enabled: true
+      internal_url: http://grafana.grafana.svc.cluster.local/grafana/
+      external_url: http://localhost:8080/grafana/
+      dashboards:
+      - name: Istio Sidecar Metrics
+        variables:
+          namespace: var-namespace
+      - name: Istio Control Plane and Gateways
+      - name: Kubernetes Workload Health
+      - name: Istio Logs
     tracing:
       enabled: true
       provider: tempo
@@ -25,3 +35,4 @@ spec:
       internal_url: http://tempo.tempo.svc.cluster.local:3200
       tempo_config:
         datasource_uid: tempo
+      external_url: http://localhost:8080/grafana/

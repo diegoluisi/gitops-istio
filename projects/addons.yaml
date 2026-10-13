@@ -25,6 +25,10 @@ spec:
       namespace: alloy
     - server: https://kubernetes.default.svc
       namespace: mimir
+    - server: https://kubernetes.default.svc
+      namespace: loki
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

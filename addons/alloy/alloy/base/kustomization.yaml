@@ -7,3 +7,5 @@ helmCharts:
     releaseName: alloy
     namespace: alloy
     valuesFile: values.yaml
+resources:
+  - node-proxy-rbac.yaml

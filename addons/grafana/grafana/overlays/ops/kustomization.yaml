@@ -12,3 +12,6 @@ configMapGenerator:
     files:
       - istio-ambient.json=dashboards/istio-ambient.json
       - istio-traces.json=dashboards/istio-traces.json
+      - istio-control-plane.json=dashboards/istio-control-plane.json
+      - kubernetes-health.json=dashboards/kubernetes-health.json
+      - istio-logs.json=dashboards/istio-logs.json

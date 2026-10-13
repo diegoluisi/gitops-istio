@@ -1,12 +1,12 @@
+---
 fullnameOverride: grafana
 persistence:
   enabled: true
   size: 2Gi
-# No initial admin account is created; this lab uses anonymous Editor access for Explore.
 env:
-  GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: "true"
+  GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: 'true'
   GF_SECURITY_ADMIN_PASSWORD: unused-initial-admin-disabled
-  GF_AUTH_DISABLE_LOGIN_FORM: "true"
+  GF_AUTH_DISABLE_LOGIN_FORM: 'true'
 grafana.ini:
   server:
     root_url: http://localhost:8080/grafana/
@@ -21,28 +21,48 @@ datasources:
   datasources.yaml:
     apiVersion: 1
     deleteDatasources:
-      - name: Prometheus
-        orgId: 1
+    - name: Prometheus
+      orgId: 1
     datasources:
-      - name: Tempo
-        uid: tempo
-        type: tempo
-        access: proxy
-        url: http://tempo.tempo.svc.cluster.local:3200
-        isDefault: true
-        editable: false
-      - name: Mimir
-        uid: mimir
-        type: prometheus
-        access: proxy
-        url: http://mimir.mimir.svc.cluster.local:9009/prometheus
-        editable: false
+    - name: Tempo
+      uid: tempo
+      type: tempo
+      access: proxy
+      url: http://tempo.tempo.svc.cluster.local:3200
+      isDefault: true
+      editable: false
+      jsonData:
+        serviceMap:
+          datasourceUid: mimir
+        nodeGraph:
+          enabled: true
+        tracesToMetrics:
+          datasourceUid: mimir
+          spanStartTimeShift: "-5m"
+          spanEndTimeShift: 5m
+          tags: []
+          queries:
+          - name: Mesh HTTP rate
+            query: sum by (destination_service_name, destination_workload_namespace)
+              (rate(istio_requests_total{reporter="destination"}[5m]))
+    - name: Mimir
+      uid: mimir
+      type: prometheus
+      access: proxy
+      url: http://mimir.mimir.svc.cluster.local:9009/prometheus
+      editable: false
+    - name: Loki
+      uid: loki
+      type: loki
+      access: proxy
+      url: http://loki.loki.svc.cluster.local:3100
+      editable: false
 sidecar:
   dashboards:
     enabled: true
     label: grafana_dashboard
     searchNamespace: grafana
-    folder: /tmp/dashboards
+    folder: "/tmp/dashboards"
     provider:
       name: gitops
       folder: Istio
