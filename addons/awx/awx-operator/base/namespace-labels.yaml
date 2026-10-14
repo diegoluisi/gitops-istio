@@ -1,0 +1,10 @@
+apiVersion: builtin
+kind: LabelTransformer
+metadata:
+  name: awx-namespace-labels
+labels:
+  istio-injection: disabled
+fieldSpecs:
+  - kind: Namespace
+    path: metadata/labels
+    create: true

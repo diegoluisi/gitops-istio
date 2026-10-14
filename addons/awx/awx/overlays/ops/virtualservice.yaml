@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: awx-ingress
+spec:
+  hosts:
+    - awx.localhost
+  gateways:
+    - istio-gateways/shared-ingress
+  http:
+    - name: awx
+      route:
+        - destination:
+            host: awx-service.awx.svc.cluster.local
+            port:
+              number: 80
