@@ -4,16 +4,11 @@ metadata:
   name: awx-ingress
 spec:
   hosts:
-    - "*"
+    - awx.localhost
   gateways:
     - istio-gateways/shared-ingress
   http:
     - name: awx
-      match:
-        - uri:
-            exact: /awx
-        - uri:
-            prefix: /awx/    
       route:
         - destination:
             host: awx-service.awx.svc.cluster.local
