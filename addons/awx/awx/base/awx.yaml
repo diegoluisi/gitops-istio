@@ -7,6 +7,7 @@ spec:
   ingress_type: none
   hostname: awx.localhost
   admin_user: admin
+  uwsgi_processes: 1
   projects_persistence: true
   projects_storage_access_mode: ReadWriteOnce
   projects_storage_size: 2Gi
@@ -16,9 +17,9 @@ spec:
   web_resource_requirements:
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
     limits:
-      memory: 1Gi
+      memory: 2Gi
   task_resource_requirements:
     requests:
       cpu: 100m
