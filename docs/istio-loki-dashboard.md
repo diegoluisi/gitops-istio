@@ -31,7 +31,7 @@ After Argo CD sync, open /grafana/d/istio-loki-14876/ through the shared ingress
 Generate traffic to /productpage and /details/1, then use a recent dashboard range.
 
 ```bash
-kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# Ingress is exposed directly by LoadBalancer at http://localhost:8080
 curl http://localhost:8080/productpage
 kubectl -n bookinfo logs deployment/productpage-v1 -c istio-proxy --tail=10
 ```

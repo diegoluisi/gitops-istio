@@ -6,7 +6,7 @@ spec:
   hosts:
     - "*"
   gateways:
-    - istio-gateways/shared-ingress
+    - istio-gateways/ingressgateway-pub
   http:
     - name: kiali
       match:

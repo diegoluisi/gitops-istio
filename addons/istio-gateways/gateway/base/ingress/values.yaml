@@ -2,4 +2,8 @@ name: istio-ingressgateway
 labels:
   istio: ingressgateway
 service:
-  type: NodePort
+  type: LoadBalancer
+  ports:
+    - name: http2
+      port: 8080
+      targetPort: 8080

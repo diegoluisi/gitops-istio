@@ -28,7 +28,7 @@ Retention is time-based and does not guarantee the disk cannot fill.
 Alloy generates service graph and span metrics from the same Istio spans sent to
 Tempo. Grafana's Tempo service map uses Mimir, and the trace-to-metrics link opens a
 mesh-wide HTTP rate query. Kiali links to Grafana dashboards and Tempo in Grafana
-through the existing localhost:8080/grafana/ shared-ingress URL. Trace graphs depend
+through the existing localhost:8080/grafana/ ingressgateway-pub URL. Trace graphs depend
 on propagated context and matching client/server spans; proxy telemetry does not
 provide application-internal spans. Application code instrumentation remains a
 separate change to the sample applications.

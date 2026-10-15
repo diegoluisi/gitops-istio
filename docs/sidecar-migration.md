@@ -41,7 +41,7 @@ Injection is disabled in the unused default namespace.
 kubectl -n bookinfo get pods
 kubectl -n bookstore get pods
 istioctl proxy-status
-kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# Ingress is exposed directly by LoadBalancer at http://localhost:8080
 curl -f http://localhost:8080/productpage
 curl -f http://localhost:8080/details/1
 curl --resolve bookstore.local:8080:127.0.0.1 http://bookstore.local:8080/productpage

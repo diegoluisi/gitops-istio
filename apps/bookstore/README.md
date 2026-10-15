@@ -20,7 +20,7 @@ After Git sync:
 ```bash
 kubectl -n argocd get application bookstore-dev
 kubectl -n bookstore get pods,svc
-kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# Ingress is exposed directly by LoadBalancer at http://localhost:8080
 # In another terminal:
 curl --resolve bookstore.local:8080:127.0.0.1 http://bookstore.local:8080/productpage
 curl --resolve bookstore.local:8080:127.0.0.1 http://bookstore.local:8080/details/0

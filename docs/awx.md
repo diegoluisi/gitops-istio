@@ -10,7 +10,7 @@ AWX uses its operator-managed ClusterIP Service and the existing shared Istio
 ingress. Access it at http://awx.localhost:8080/ while forwarding the shared ingress:
 
 ```bash
-kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# Ingress is exposed directly by LoadBalancer at http://localhost:8080
 # In a second terminal:
 curl --resolve awx.localhost:8080:127.0.0.1 http://awx.localhost:8080/api/v2/ping/
 ```

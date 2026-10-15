@@ -1,6 +1,9 @@
 # gitops-istio
 GitOps for Istio ICA Tests
 
+Direct access: the Istio `ingressgateway-pub` Gateway uses a Docker Desktop
+LoadBalancer on host port 8080. See [ingress access](docs/ingress-access.md).
+
 The current manifests use **sidecar mode**. See [the migration guide](docs/sidecar-migration.md)
 for deployment order and verification. Older ambient walkthroughs below describe
 the previous lab configuration; waypoint and ztunnel resources have been retired.
@@ -98,7 +101,7 @@ keeps workloads when the old ApplicationSet is removed.
 kubectl -n argocd get applicationsets,applications
 kubectl -n istio-system get pods,svc
 kubectl -n istio-gateways get pods,svc
-kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# Ingress is exposed directly by LoadBalancer at http://localhost:8080
 ```
 
 The `default` namespace is enrolled declaratively by
@@ -222,12 +225,12 @@ installation.
 ## Shared ingress
 
 `addons/istio-gateways/gateway/base/shared-gateway.yaml` defines one Istio
-`networking.istio.io/v1` Gateway named `shared-ingress`. It selects the existing
+`networking.istio.io/v1` Gateway named `ingressgateway-pub`. It selects the existing
 `istio: ingressgateway` pods and accepts HTTP on port 80. It is independent of
 the ambient waypoint Gateway.
 
 Applications define their own VirtualServices in their namespaces and reference
-`istio-gateways/shared-ingress`. Bookinfo's dev overlay exposes `/details`
+`istio-gateways/ingressgateway-pub`. Bookinfo's dev overlay exposes `/details`
 (rewritten to `/details/0`), `/details/<id>`, and `/productpage` with its supporting
 static, login, logout, and API paths. Adding another application requires its
 VirtualService with non-overlapping paths or a separate hostname; no additional
@@ -236,7 +239,7 @@ ingress Deployment is needed.
 After Git sync:
 
 ```bash
-kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# Ingress is exposed directly by LoadBalancer at http://localhost:8080
 # In another terminal:
 curl http://localhost:8080/details
 curl http://localhost:8080/details/0
@@ -255,7 +258,7 @@ The ops directory generator discovers `kiali-operator-ops`, `kiali-ops`, and
 backend with persistent storage.
 Kiali is read-only, with anonymous authentication for local port-forward access.
 Kiali queries Tempo for traces. Grafana has provisioned Tempo and Mimir datasources. The ops overlay routes `/kiali` and `/kiali/` through
-`istio-gateways/shared-ingress` to Kiali on port 20001, without rewriting the path.
+`istio-gateways/ingressgateway-pub` to Kiali on port 20001, without rewriting the path.
 Using the ingress port-forward on port 8080, open `http://localhost:8080/kiali/`.
 Kiali retains anonymous, read-only access for this lab.
 
@@ -268,7 +271,7 @@ traffic, and use a recent time window (for example, Last 5 minutes). Generate
 requests through the ingress in another terminal:
 
 ```bash
-kubectl -n istio-gateways port-forward svc/istio-ingressgateway 8080:80
+# Ingress is exposed directly by LoadBalancer at http://localhost:8080
 # In another terminal:
 for i in $(seq 1 60); do
   curl -fsS http://localhost:8080/productpage > /dev/null
@@ -376,7 +379,7 @@ Namespace manifest. Waypoint tracing uses a root Telemetry policy targeting the
 `istio-waypoint` GatewayClass. A default
 StorageClass is required for the Tempo and Grafana PVCs.
 
-Grafana is also exposed through `istio-gateways/shared-ingress` at
+Grafana is also exposed through `istio-gateways/ingressgateway-pub` at
 `http://localhost:8080/grafana/`. Its ops VirtualService preserves the subpath;
 Helm values set `server.root_url` and `serve_from_sub_path` so assets, API calls,
 and redirects use `/grafana/`. The public URL is configured for the local ingress
