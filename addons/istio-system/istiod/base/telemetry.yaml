@@ -3,6 +3,9 @@ kind: Telemetry
 metadata:
   name: mesh-tracing
 spec:
+  accessLogging:
+    - providers:
+        - name: envoy
   tracing:
     - providers:
         - name: alloy

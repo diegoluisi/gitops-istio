@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: grafana-ingress
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - istio-gateways/shared-ingress
+  http:
+    - name: grafana
+      match:
+        - uri:
+            exact: /grafana
+        - uri:
+            prefix: /grafana/
+      route:
+        - destination:
+            host: grafana.grafana.svc.cluster.local
+            port:
+              number: 80

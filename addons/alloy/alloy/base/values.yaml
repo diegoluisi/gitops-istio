@@ -1,0 +1,275 @@
+fullnameOverride: alloy
+controller:
+  type: deployment
+  replicas: 1
+alloy:
+  enableReporting: false
+  extraPorts:
+    - name: grpc-otlp
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: http-otlp
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+  configMap:
+    content: |
+      otelcol.receiver.otlp "istio" {
+        grpc {
+          endpoint = "0.0.0.0:4317"
+        }
+        http {
+          endpoint = "0.0.0.0:4318"
+        }
+        output {
+          traces = [otelcol.processor.batch.traces.input, otelcol.connector.servicegraph.istio.input, otelcol.connector.spanmetrics.istio.input]
+        }
+      }
+      otelcol.processor.batch "traces" {
+        output {
+          traces = [otelcol.exporter.otlp.tempo.input]
+        }
+      }
+      otelcol.exporter.otlp "tempo" {
+        client {
+          endpoint = "tempo.tempo.svc.cluster.local:4317"
+          tls {
+            insecure = true
+          }
+        }
+      }
+
+      discovery.kubernetes "istio_pods" {
+        role = "pod"
+      }
+      discovery.relabel "istio_metrics" {
+        targets = discovery.kubernetes.istio_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_scrape"]
+          regex = "true"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_phase"]
+          regex = "Running"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_port_name"]
+          regex = "http-envoy-prom|http-monitoring"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip", "__meta_kubernetes_pod_annotation_prometheus_io_port"]
+          regex = "([^:]+);([0-9]+)"
+          replacement = "$1:$2"
+          target_label = "__address__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_ip", "__meta_kubernetes_pod_annotation_prometheus_io_port"]
+          regex = "(.+:.*);([0-9]+)"
+          replacement = "[$1]:$2"
+          target_label = "__address__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          separator = "-"
+          target_label = "instance"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_annotation_prometheus_io_path"]
+          regex = "(.+)"
+          target_label = "__metrics_path__"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label = "pod"
+        }
+        rule {
+          target_label = "cluster"
+          replacement = "ops"
+        }
+      }
+      prometheus.scrape "istio" {
+        targets = discovery.relabel.istio_metrics.output
+        job_name = "integrations/istio"
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      prometheus.scrape "observability" {
+        targets = [
+          {"__address__" = "alloy.alloy.svc.cluster.local:12345"},
+          {"__address__" = "mimir.mimir.svc.cluster.local:9009"},
+          {"__address__" = "tempo.tempo.svc.cluster.local:3200"},
+          {"__address__" = "loki.loki.svc.cluster.local:3100"},
+        ]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      prometheus.remote_write "mimir" {
+        endpoint {
+          url = "http://mimir.mimir.svc.cluster.local:9009/api/v1/push"
+        }
+      }
+
+      otelcol.connector.servicegraph "istio" {
+        metrics_flush_interval = "15s"
+        output {
+          metrics = [otelcol.exporter.prometheus.trace_metrics.input]
+        }
+      }
+      otelcol.connector.spanmetrics "istio" {
+        namespace = "traces_spanmetrics"
+        metrics_flush_interval = "15s"
+        histogram {
+          explicit {}
+        }
+        output {
+          metrics = [otelcol.exporter.prometheus.trace_metrics.input]
+        }
+      }
+      otelcol.exporter.prometheus "trace_metrics" {
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      prometheus.scrape "kube_state" {
+        targets = [{"__address__" = "kube-state-metrics.kube-system.svc.cluster.local:8080", "cluster" = "ops"}]
+        job_name = "kube-state-metrics"
+        scrape_interval = "30s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      discovery.kubernetes "nodes" {
+        role = "node"
+      }
+      discovery.relabel "cadvisor" {
+        targets = discovery.kubernetes.nodes.targets
+        rule {
+          target_label = "__address__"
+          replacement = "kubernetes.default.svc:443"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label = "__metrics_path__"
+          replacement = "/api/v1/nodes/$1/proxy/metrics/cadvisor"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_node_name"]
+          target_label = "node"
+        }
+        rule {
+          target_label = "cluster"
+          replacement = "ops"
+        }
+      }
+      prometheus.scrape "cadvisor" {
+        targets = discovery.relabel.cadvisor.output
+        job_name = "kubernetes-cadvisor"
+        scheme = "https"
+        scrape_interval = "30s"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          server_name = "kubernetes.default.svc"
+        }
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      discovery.relabel "kubelet" {
+        targets = discovery.relabel.cadvisor.output
+        rule {
+          source_labels = ["node"]
+          target_label = "__metrics_path__"
+          replacement = "/api/v1/nodes/$1/proxy/metrics"
+        }
+      }
+      prometheus.scrape "kubelet" {
+        targets = discovery.relabel.kubelet.output
+        job_name = "kubernetes-kubelet"
+        scheme = "https"
+        scrape_interval = "30s"
+        bearer_token_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        tls_config {
+          ca_file = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          server_name = "kubernetes.default.svc"
+        }
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      discovery.relabel "pod_logs" {
+        targets = discovery.kubernetes.istio_pods.targets
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_container_name"]
+          regex = "(bookinfo|bookstore|istio-system|istio-gateways|alloy|tempo|mimir|grafana|loki|kiali-system|awx);.*|.*;istio-proxy"
+          action = "keep"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          target_label = "namespace"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          target_label = "pod"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          target_label = "container"
+        }
+        rule {
+          source_labels = ["__meta_kubernetes_namespace", "__meta_kubernetes_pod_name"]
+          separator = "-"
+          target_label = "instance"
+        }
+        rule {
+          target_label = "cluster"
+          replacement = "ops"
+        }
+      }
+      loki.source.kubernetes "pods" {
+        targets = discovery.relabel.pod_logs.output
+        forward_to = [loki.process.classify.receiver]
+      }
+      loki.write "default" {
+        endpoint {
+          url = "http://loki.loki.svc.cluster.local:3100/loki/api/v1/push"
+        }
+      }
+
+      loki.process "classify" {
+        forward_to = [loki.write.default.receiver]
+        stage.match {
+          selector = "{container=\"istio-proxy\"}"
+          stage.static_labels {
+            values = { job = "integrations/istio" }
+          }
+          stage.match {
+            selector = "{container=\"istio-proxy\"} |~ \"^\\\\[\""
+            stage.regex {
+              expression = `^\[[^]]+\] "(?P<request_method>[^ ]+) [^ ]+ (?P<protocol>[^" ]+)" (?P<response_code>[0-9]{3}) `
+            }
+            stage.labels {
+              values = { request_method = "", protocol = "", response_code = "" }
+            }
+            stage.static_labels {
+              values = { log_type = "access" }
+            }
+          }
+          stage.match {
+            selector = "{container=\"istio-proxy\"} !~ \"^\\\\[\""
+            stage.multiline {
+              firstline = `^\d{4}-\d{2}-\d{2}T`
+              max_wait_time = "3s"
+            }
+            stage.regex {
+              expression = `^\S+\s+(?P<level>debug|info|warn|warning|error|critical)\s+`
+            }
+            stage.labels {
+              values = { level = "" }
+            }
+            stage.static_labels {
+              values = { log_type = "system" }
+            }
+          }
+        }
+      }

@@ -1,5 +1,5 @@
 meshConfig:
-  accessLogFile: /dev/stdout
+  accessLogEncoding: TEXT
   enableTracing: true
   extensionProviders:
     - name: alloy
