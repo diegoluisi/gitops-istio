@@ -45,6 +45,15 @@ datasources:
           - name: Mesh HTTP rate
             query: sum by (destination_service_name, destination_workload_namespace)
               (rate(istio_requests_total{reporter="destination"}[5m]))
+        tracesToLogsV2:
+          datasourceUid: loki
+          spanStartTimeShift: "-1m"
+          spanEndTimeShift: 1m
+          customQuery: true
+          query: '{job="integrations/istio",container="istio-proxy",log_type="access"}
+            |= "traceID=$${__span.traceId}"'
+          filterByTraceID: false
+          filterBySpanID: false
     - name: Mimir
       uid: mimir
       type: prometheus
@@ -57,6 +66,13 @@ datasources:
       access: proxy
       url: http://loki.loki.svc.cluster.local:3100
       editable: false
+      jsonData:
+        derivedFields:
+        - name: TraceID
+          matcherRegex: traceID=([0-9a-fA-F]{32}|[0-9a-fA-F]{16})\b
+          datasourceUid: tempo
+          url: "$${__value.raw}"
+          urlDisplayLabel: View trace in Tempo
 sidecar:
   dashboards:
     enabled: true

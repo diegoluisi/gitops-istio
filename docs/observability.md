@@ -73,9 +73,9 @@ email/chat delivery. The rules are visible in Grafana Alerting.
 ## Helm access-log and trace configuration
 
 Istiod Helm values configure stdout TEXT access logs with the standard Envoy fields
-and a trailing traceID=%REQ(x-b3-traceid)%. The named envoy file-access-log provider
-uses the same format for the mesh Telemetry policy. The B3 field reflects the incoming
-header and is '-' if no B3 trace ID is present; it does not generate a trace ID.
+and a trailing traceID=%TRACE_ID%. The named envoy file-access-log provider
+uses the same format for the mesh Telemetry policy. The trace field uses Envoy's active span, so it also works without an incoming
+B3 header; requests without a traced HTTP span have no trace ID.
 Istio tracing continues over OTLP/gRPC to alloy.alloy.svc.cluster.local:4317,
 then Alloy forwards to Tempo. Port 9411/Zipkin is not enabled on Alloy.
 
