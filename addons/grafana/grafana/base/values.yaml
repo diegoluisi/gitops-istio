@@ -69,7 +69,7 @@ datasources:
       jsonData:
         derivedFields:
         - name: TraceID
-          matcherRegex: traceID=([0-9a-fA-F]{32}|[0-9a-fA-F]{16})\b
+          matcherRegex: traceID=([0-9a-fA-F]{32}|[0-9a-fA-F]{16})
           datasourceUid: tempo
           url: "$${__value.raw}"
           urlDisplayLabel: View trace in Tempo

@@ -5,7 +5,7 @@ The article uses Istio 1.10, Zipkin and Fluent Bit. This repo uses the existing
 Istio Helm charts, OTLP Alloy receiver, Loki, Tempo and provisioned Grafana instead.
 
 Envoy writes traceID=%TRACE_ID% in its text access log. Unlike a B3-header-only
-formatter, this uses the active span ID for requests where tracing generates a new
+formatter, this uses the active trace ID for requests where tracing generates a new
 trace context. Alloy tails the proxy stdout and delivers logs to Loki; proxy spans
 are exported via OTLP/gRPC to Alloy on 4317 and then to Tempo. Sampling is 100%.
 Trace IDs are not indexed Loki labels.
