@@ -69,3 +69,16 @@ no-data is OK for these rules, while the scrape rule explicitly detects total
 absence. Legacy galley_validation_failed is collected if Istiod exposes it.
 Notifications are not configured: add a real Grafana contact point before expecting
 email/chat delivery. The rules are visible in Grafana Alerting.
+
+## Helm access-log and trace configuration
+
+Istiod Helm values configure stdout TEXT access logs with the standard Envoy fields
+and a trailing traceID=%REQ(x-b3-traceid)%. The named envoy file-access-log provider
+uses the same format for the mesh Telemetry policy. The B3 field reflects the incoming
+header and is '-' if no B3 trace ID is present; it does not generate a trace ID.
+Istio tracing continues over OTLP/gRPC to alloy.alloy.svc.cluster.local:4317,
+then Alloy forwards to Tempo. Port 9411/Zipkin is not enabled on Alloy.
+
+Sampling is 100% in Telemetry and the mesh default; max path tag length is 99999 in
+the mesh default and the active OTLP extension provider (maxTagLength). No
+IstioOperator custom resource is installed: Kustomize renders the Istiod Helm chart.
