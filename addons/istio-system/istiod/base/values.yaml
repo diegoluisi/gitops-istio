@@ -1,5 +1,7 @@
 profile: demo
 meshConfig:
+  outboundTrafficPolicy:
+    mode: REGISTRY_ONLY
   accessLogFile: /dev/stdout
   accessLogEncoding: TEXT
   accessLogFormat: |
