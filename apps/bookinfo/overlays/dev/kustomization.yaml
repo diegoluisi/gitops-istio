@@ -7,5 +7,5 @@ resources:
   - egress-routing.yaml
   - service-entry.yaml
   - virtualservice.yaml
-transformers:
-  - sidecar-rollout.yaml
+# transformers:
+#   - sidecar-rollout.yaml
