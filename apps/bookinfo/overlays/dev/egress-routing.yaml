@@ -5,7 +5,6 @@ metadata:
 spec:
   hosts: 
     - httpbin.org
-    - wikipedia.org
   exportTo: [".", istio-gateways]
   gateways: [mesh, istio-gateways/egressgateway]
   http:
@@ -17,7 +16,6 @@ spec:
             host: istio-egressgateway.istio-gateways.svc.cluster.local
             port:
               number: 80
-            subset: httpbin
           weight: 100
     - match:
         - gateways: [istio-gateways/egressgateway]
@@ -27,7 +25,6 @@ spec:
             host: httpbin.org
             port:
               number: 80
-            subset: httpbin
           weight: 100              
 ---
 apiVersion: networking.istio.io/v1
