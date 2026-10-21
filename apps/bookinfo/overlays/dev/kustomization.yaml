@@ -3,9 +3,7 @@ kind: Kustomization
 namespace: bookinfo
 resources:
   - ../../base
+  - destination-rule.yaml
   - peer-authentication.yaml
-  - egress-routing.yaml
   - service-entry.yaml
   - virtualservice.yaml
-# transformers:
-#   - sidecar-rollout.yaml

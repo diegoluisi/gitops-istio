@@ -47,3 +47,46 @@ spec:
             host: productpage.bookinfo.svc.cluster.local
             port:
               number: 9080
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: bookinfo-egress
+spec:
+  hosts: 
+    - httpbin.org
+    - www.wikipedia.org
+  exportTo: [".", istio-gateways]
+  gateways: [mesh, istio-gateways/egressgateway]
+  http:
+    - match:
+        - gateways: [mesh]
+          port: 80
+      route:
+        - destination:
+            host: istio-egressgateway.istio-gateways.svc.cluster.local
+            port:
+              number: 80
+          weight: 100
+    - match:
+        - gateways: [istio-gateways/egressgateway]
+          port: 80
+          authority:
+            regex: 'httpbin\.org(:80)?'
+      route:
+        - destination:
+            host: httpbin.org
+            port:
+              number: 80
+          weight: 100
+    - match:
+        - gateways: [istio-gateways/egressgateway]
+          port: 80
+          authority:
+            regex: 'www\.wikipedia\.org(:80)?'
+      route:
+        - destination:
+            host: www.wikipedia.org
+            port:
+              number: 80
+          weight: 100

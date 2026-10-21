@@ -1,0 +1,14 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: bookinfo-egress
+spec:
+  host: istio-egressgateway.istio-gateways.svc.cluster.local
+  exportTo: ["."]
+  trafficPolicy:
+    portLevelSettings:
+      - port:
+          number: 80
+        tls:
+          mode: ISTIO_MUTUAL
+          sni: httpbin.org

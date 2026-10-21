@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1
 kind: ServiceEntry
 metadata:
-  name: service-entry
+  name: bookinfo
 spec:
   exportTo:
     - "."
