@@ -1,3 +1,4 @@
+profile: demo
 name: istio-ingressgateway
 labels:
   istio: ingressgateway

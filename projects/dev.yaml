@@ -56,6 +56,11 @@ spec:
         server: https://kubernetes.default.svc
         namespace: '{{ index .path.segments 1 }}'
       syncPolicy:
+        managedNamespaceMetadata:
+          labels:
+            istio-injection: enabled
+          annotations:
+            argocd.argoproj.io/sync-options: Prune=false
         automated:
           prune: true
           selfHeal: true

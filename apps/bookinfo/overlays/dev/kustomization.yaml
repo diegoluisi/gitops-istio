@@ -6,7 +6,6 @@ resources:
   - peer-authentication.yaml
   - egress-routing.yaml
 
-  - namespace.yaml
   - networkpolicy.yaml
   - service-entry.yaml
   - virtualservice.yaml
