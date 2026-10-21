@@ -61,7 +61,8 @@ spec:
     - istio-gateways/egressgateway
   http:
     - match:
-        - gateways: [mesh]
+        - gateways: 
+            - mesh
           port: 80
       route:
         - destination:
