@@ -75,6 +75,8 @@ spec:
         - gateways: 
             - istio-gateways/egressgateway
           port: 80
+          authority:
+            regex: 'httpbin\.org(:80)?'
       route:
         - destination:
             host: httpbin.org
@@ -85,6 +87,8 @@ spec:
         - gateways: 
             - istio-gateways/egressgateway
           port: 80
+          authority:
+            regex: 'www\.wikipedia\.org(:80)?'
       route:
         - destination:
             host: www.wikipedia.org

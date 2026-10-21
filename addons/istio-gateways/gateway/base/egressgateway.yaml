@@ -8,8 +8,8 @@ spec:
   servers:
     - port:
         number: 80
-        name: http
-        protocol: HTTP
+        name: tls-http
+        protocol: HTTPS
       hosts:
         - "*"
       tls:
