@@ -1,13 +1,14 @@
 apiVersion: networking.istio.io/v1
 kind: ServiceEntry
 metadata:
-  name: httpbin-egress
+  name: service-entry
 spec:
   exportTo:
     - "."
     - istio-gateways
   hosts:
     - httpbin.org
+    - www.wikipedia.org
   ports:
     - number: 80
       name: http
