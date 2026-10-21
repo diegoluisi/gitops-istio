@@ -1129,7 +1129,7 @@
         "type": "loki",
         "uid": "loki"
       },
-      "description": "",
+      "description": "Top 10 client addresses by access-log count over the last 15 minutes. Uses X-Forwarded-For, falling back to the downstream peer address without its port. Forwarded values may contain proxy chains; fallback peers may be internal proxies. Counts include each matching proxy log, not unique visits.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1190,18 +1190,6 @@
                 }
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Country"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 74
-              }
-            ]
           }
         ]
       },
@@ -1232,11 +1220,12 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "topk(10, sum by (forward_for) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` |  __error__=\"\" [$__interval])))",
+          "expr": "topk(10, sum by (visitor_ip) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` | label_format visitor_ip=`{{ if or (eq .forward_for \"-\") (eq .forward_for \"\") }}{{ regexReplaceAll \":[0-9]+$\" .downstream_remote_address \"\" }}{{ else }}{{ .forward_for }}{{ end }}` | __error__=\"\" [$__range])))",
           "instant": true,
-          "legendFormat": "{{remote_addr}}",
+          "legendFormat": "{{visitor_ip}}",
           "range": false,
-          "refId": "A"
+          "refId": "A",
+          "format": "table"
         }
       ],
       "timeFrom": "15m",
@@ -1246,21 +1235,17 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Field": false,
               "Time": true
             },
             "indexByName": {
               "Time": 0,
-              "Value #A": 3,
-              "geoip_country_code": 2,
-              "remote_addr": 1
+              "visitor_ip": 1,
+              "Value": 2
             },
             "renameByName": {
-              "Field": "IP Address",
-              "Total": "Requests",
-              "Value #A": "Requests",
-              "geoip_country_code": "Country",
-              "remote_addr": "IP Address "
+              "visitor_ip": "IP Address",
+              "Value": "Requests",
+              "Value #A": "Requests"
             }
           }
         }
