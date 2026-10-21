@@ -3,7 +3,9 @@ kind: Kustomization
 namespace: bookinfo
 resources:
   - ../../base
-  - destination-rule.yaml
+  - egress/destination-rule.yaml
   - peer-authentication.yaml
-  - service-entry.yaml
   - virtualservice.yaml
+  - egress/httpbin.yaml
+  - egress/wikipedia.yaml
+  - egress/example.yaml

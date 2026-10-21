@@ -1,0 +1,48 @@
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: example-egress
+spec:
+  exportTo: [".", istio-gateways]
+  hosts:
+    - example.com
+  ports:
+    - number: 80
+      name: http
+      protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: example-egress
+spec:
+  exportTo: [".", istio-gateways]
+  hosts:
+    - example.com
+  gateways:
+    - mesh
+    - istio-gateways/egressgateway
+  http:
+    - name: through-egress-gateway
+      match:
+        - gateways: [mesh]
+          port: 80
+      route:
+        - destination:
+            host: istio-egressgateway.istio-gateways.svc.cluster.local
+            subset: egressgateway
+            port:
+              number: 80
+    - name: to-example
+      match:
+        - gateways: [istio-gateways/egressgateway]
+          port: 80
+          authority:
+            regex: 'example\.com(:80)?'
+      route:
+        - destination:
+            host: example.com
+            port:
+              number: 80

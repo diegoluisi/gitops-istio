@@ -6,6 +6,8 @@ spec:
   host: istio-egressgateway.istio-gateways.svc.cluster.local
   subsets:
     - name: egressgateway
+      label:
+        istio: egressgateway
   trafficPolicy:
     portLevelSettings:
       - port:

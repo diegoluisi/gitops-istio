@@ -1,0 +1,51 @@
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: httpbin-egress
+spec:
+  exportTo: [".", istio-gateways]
+  hosts:
+    - httpbin.org
+  ports:
+    - number: 80
+      name: http
+      protocol: HTTP
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: httpbin-egress
+spec:
+  exportTo: [".", istio-gateways]
+  hosts:
+    - httpbin.org
+  gateways:
+    - mesh
+    - istio-gateways/egressgateway
+  http:
+    - name: through-egress-gateway
+      match:
+        - gateways: [mesh]
+          port: 80
+      route:
+        - destination:
+            host: istio-egressgateway.istio-gateways.svc.cluster.local
+            subset: egressgateway
+            port:
+              number: 80
+    - name: to-httpbin
+      match:
+        - gateways: [istio-gateways/egressgateway]
+          port: 80
+          authority:
+            regex: 'httpbin\.org(:80)?'
+      route:
+        - destination:
+            host: httpbin.org
+            port:
+              number: 80
