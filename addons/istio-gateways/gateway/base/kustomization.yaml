@@ -14,5 +14,5 @@ helmCharts:
     namespace: istio-gateways
     valuesFile: egress/values.yaml
 resources:
-  - ingressgateway-pub.yaml
-  - egress-httpbin.yaml
+  - ingressgateway.yaml
+  - egressgateway.yaml

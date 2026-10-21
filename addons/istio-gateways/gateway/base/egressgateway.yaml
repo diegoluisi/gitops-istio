@@ -1,0 +1,77 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: egressgateway
+spec:
+  selector:
+    istio: egressgateway
+  servers:
+    - port:
+        number: 80
+        name: tls-httpbin
+        protocol: HTTPS
+      hosts:
+        - *
+      tls:
+        mode: ISTIO_MUTUAL
+# ---
+# apiVersion: security.istio.io/v1
+# kind: AuthorizationPolicy
+# metadata:
+#   name: egress-bookinfo-httpbin-only
+# spec:
+#   selector:
+#     matchLabels:
+#       istio: egressgateway
+#   action: ALLOW
+#   rules:
+#     - from:
+#         - source:
+#             principals: ["cluster.local/ns/bookinfo/sa/*"]
+#       to:
+#         - operation:
+#             hosts: [httpbin.org, "httpbin.org:80"]
+#             ports: ["8080"]
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: egress-gateway-outbound
+# spec:
+#   podSelector:
+#     matchLabels:
+#       istio: egressgateway
+#   policyTypes: [Egress]
+#   egress:
+#     - to:
+#         - namespaceSelector:
+#             matchLabels:
+#               kubernetes.io/metadata.name: kube-system
+#           podSelector:
+#             matchLabels:
+#               k8s-app: kube-dns
+#       ports:
+#         - protocol: UDP
+#           port: 53
+#         - protocol: TCP
+#           port: 53
+#     - to:
+#         - namespaceSelector:
+#             matchLabels:
+#               kubernetes.io/metadata.name: istio-system
+#           podSelector:
+#             matchLabels:
+#               app: istiod
+#       ports:
+#         - protocol: TCP
+#           port: 15012
+#     - to:
+#         - namespaceSelector:
+#             matchLabels:
+#               kubernetes.io/metadata.name: alloy
+#       ports:
+#         - protocol: TCP
+#           port: 4317
+#     - ports:
+#         - protocol: TCP
+#           port: 80

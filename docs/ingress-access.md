@@ -1,6 +1,6 @@
-# Direct access through ingressgateway-pub
+# Direct access through ingressgateway
 
-The Istio Gateway ingressgateway-pub in namespace istio-gateways selects the
+The Istio Gateway ingressgateway in namespace istio-gateways selects the
 existing istio-ingressgateway deployment. The Helm release and Service keep their
 names. Its LoadBalancer Service publishes HTTP port 8080 to Envoy port 8080;
 the Istio Gateway listener uses the same port. Docker Desktop exposes this outside

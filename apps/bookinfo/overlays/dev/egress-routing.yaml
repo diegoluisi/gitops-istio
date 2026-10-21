@@ -1,11 +1,13 @@
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
-  name: httpbin-egress
+  name: bookinfo-egress
 spec:
-  hosts: [httpbin.org]
+  hosts: 
+    - httpbin.org
+    - wikipedia.org
   exportTo: [".", istio-gateways]
-  gateways: [mesh, istio-gateways/bookinfo-egress]
+  gateways: [mesh, istio-gateways/egressgateway]
   http:
     - match:
         - gateways: [mesh]
@@ -15,14 +17,18 @@ spec:
             host: istio-egressgateway.istio-gateways.svc.cluster.local
             port:
               number: 80
+            subset: httpbin
+          weight: 100
     - match:
-        - gateways: [istio-gateways/bookinfo-egress]
+        - gateways: [istio-gateways/egressgateway]
           port: 80
       route:
         - destination:
             host: httpbin.org
             port:
               number: 80
+            subset: httpbin
+          weight: 100              
 ---
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
