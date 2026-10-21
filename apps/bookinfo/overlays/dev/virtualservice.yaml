@@ -56,8 +56,9 @@ spec:
   hosts: 
     - httpbin.org
     - www.wikipedia.org
-  exportTo: [".", istio-gateways]
-  gateways: [mesh, istio-gateways/egressgateway]
+  gateways: 
+    - mesh
+    - istio-gateways/egressgateway
   http:
     - match:
         - gateways: [mesh]
@@ -65,14 +66,13 @@ spec:
       route:
         - destination:
             host: istio-egressgateway.istio-gateways.svc.cluster.local
+            subset: egressgateway
             port:
               number: 80
           weight: 100
     - match:
         - gateways: [istio-gateways/egressgateway]
           port: 80
-          authority:
-            regex: 'httpbin\.org(:80)?'
       route:
         - destination:
             host: httpbin.org
