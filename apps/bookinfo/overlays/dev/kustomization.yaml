@@ -5,8 +5,6 @@ resources:
   - ../../base
   - peer-authentication.yaml
   - egress-routing.yaml
-
-  - networkpolicy.yaml
   - service-entry.yaml
   - virtualservice.yaml
 transformers:
