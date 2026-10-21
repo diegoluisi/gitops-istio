@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: bookinfo-external-sites
+spec:
+  exportTo: [".", istio-gateways]
+  hosts:
+    - httpbin.org
+    - www.wikipedia.org
+    - example.com
+  location: MESH_EXTERNAL
+  ports:
+    - number: 80
+      name: http
+      protocol: HTTP
+    - number: 443
+      name: https
+      protocol: TLS
+  resolution: DNS
