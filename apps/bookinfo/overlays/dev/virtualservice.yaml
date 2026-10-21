@@ -71,7 +71,8 @@ spec:
               number: 80
           weight: 100
     - match:
-        - gateways: [istio-gateways/egressgateway]
+        - gateways: 
+            - istio-gateways/egressgateway
           port: 80
       route:
         - destination:
@@ -80,10 +81,9 @@ spec:
               number: 80
           weight: 100
     - match:
-        - gateways: [istio-gateways/egressgateway]
+        - gateways: 
+            - istio-gateways/egressgateway
           port: 80
-          authority:
-            regex: 'www\.wikipedia\.org(:80)?'
       route:
         - destination:
             host: www.wikipedia.org
