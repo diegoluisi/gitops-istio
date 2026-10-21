@@ -6,7 +6,7 @@ spec:
   host: istio-egressgateway.istio-gateways.svc.cluster.local
   subsets:
     - name: egressgateway
-      label:
+      labels:
         istio: egressgateway
   trafficPolicy:
     portLevelSettings:
@@ -14,4 +14,3 @@ spec:
           number: 80
         tls:
           mode: ISTIO_MUTUAL
-          sni: httpbin.org
