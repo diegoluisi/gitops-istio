@@ -13,5 +13,8 @@ spec:
     - number: 80
       name: http
       protocol: HTTP
+    - number: 443
+      name: https
+      protocol: HTTPS
   location: MESH_EXTERNAL
   resolution: DNS

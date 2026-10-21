@@ -44,7 +44,7 @@ spec:
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
-  name: destination-rule-egress
+  name: destination-rule
 spec:
   host: istio-egressgateway.istio-gateways.svc.cluster.local
   exportTo: ["."]
