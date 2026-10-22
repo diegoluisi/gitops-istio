@@ -7,3 +7,6 @@ configMapGenerator:
   - name: mimir-config
     files:
       - mimir.yaml
+  - name: mimir-recording-rules
+    files:
+      - istio.yaml=rules/istio.yaml

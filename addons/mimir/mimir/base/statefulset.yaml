@@ -50,10 +50,16 @@ spec:
               mountPath: /etc/mimir
             - name: data
               mountPath: /data
+            - name: recording-rules
+              mountPath: /etc/mimir-rules/anonymous
+              readOnly: true
       volumes:
         - name: config
           configMap:
             name: mimir-config
+        - name: recording-rules
+          configMap:
+            name: mimir-recording-rules
   volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim

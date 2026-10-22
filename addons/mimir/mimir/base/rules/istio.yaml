@@ -1,0 +1,20 @@
+groups:
+  - name: istio.workload-rates
+    interval: 30s
+    rules:
+      - record: workload:istio_requests_total:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_requests_total{job="integrations/istio"}[5m]))
+      - record: workload:istio_request_duration_milliseconds_bucket:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_request_duration_milliseconds_bucket{job="integrations/istio"}[5m]))
+      - record: workload:istio_request_duration_milliseconds_sum:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_request_duration_milliseconds_sum{job="integrations/istio"}[5m]))
+      - record: workload:istio_request_duration_milliseconds_count:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_request_duration_milliseconds_count{job="integrations/istio"}[5m]))
+      - record: workload:istio_tcp_sent_bytes_total:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_tcp_sent_bytes_total{job="integrations/istio"}[5m]))
+      - record: workload:istio_tcp_received_bytes_total:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_tcp_received_bytes_total{job="integrations/istio"}[5m]))
+      - record: workload:istio_tcp_connections_opened_total:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_tcp_connections_opened_total{job="integrations/istio"}[5m]))
+      - record: workload:istio_tcp_connections_closed_total:rate5m
+        expr: sum without (instance, pod, namespace, kubernetes_namespace, kubernetes_pod_name) (rate(istio_tcp_connections_closed_total{job="integrations/istio"}[5m]))

@@ -422,7 +422,7 @@ alerting:
         title: IstioMetricsDown
         condition: B
         for: 5m
-        noDataState: OK
+        noDataState: Alerting
         execErrState: Error
         isPaused: false
         labels:
