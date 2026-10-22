@@ -109,7 +109,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "100 * sum by (cluster, destination_service_name, reporter) (workload:istio_requests_total:rate5m{destination_workload_namespace=~\"$namespace\",response_code=~\"5..\"}) / sum by (cluster, destination_service_name, reporter) (workload:istio_requests_total:rate5m{destination_workload_namespace=~\"$namespace\"})",
+          "expr": "100 * ((sum by (cluster, destination_service_name, reporter) (workload:istio_requests_total:rate5m{destination_workload_namespace=~\"$namespace\",response_code=~\"5..\"})) or (0 * (sum by (cluster, destination_service_name, reporter) (workload:istio_requests_total:rate5m{destination_workload_namespace=~\"$namespace\"})))) / (sum by (cluster, destination_service_name, reporter) (workload:istio_requests_total:rate5m{destination_workload_namespace=~\"$namespace\"}))",
           "legendFormat": "{{destination_service_name}} {{source_workload}} \u2192 {{destination_workload}} ({{reporter}})"
         }
       ],
@@ -125,7 +125,7 @@
           "placement": "bottom"
         }
       },
-      "description": "Uses Mimir workload recording rules with a fixed 5-minute rate window. Source and destination reporters remain separate."
+      "description": "Zero when requests are observed without HTTP 5xx responses; undefined when request rate is zero. Source and destination reporters are kept separate."
     },
     {
       "id": 3,
@@ -265,6 +265,19 @@
           "placement": "bottom"
         }
       }
+    }
+  ],
+  "links": [
+    {
+      "title": "Istio dashboards",
+      "type": "dashboards",
+      "tags": [
+        "istio"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
     }
   ]
 }

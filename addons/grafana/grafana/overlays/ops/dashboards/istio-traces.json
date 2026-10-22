@@ -222,5 +222,18 @@
       ],
       "options": {}
     }
+  ],
+  "links": [
+    {
+      "title": "Istio dashboards",
+      "type": "dashboards",
+      "tags": [
+        "istio"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
   ]
 }

@@ -63,13 +63,25 @@
       }
     ]
   },
-  "description": "Grafana.com dashboard 14876 revision 3, adapted for the provisioned Loki datasource and Alloy Istio access-log labels. Default scope: Bookinfo. Log-derived request counts include each selected proxy observation.",
+  "description": "Envoy access-log analysis. Counts represent proxy observations, not unique application requests; restrict to an ingress proxy for visitor analysis.",
   "editable": false,
   "fiscalYearStartMonth": 0,
   "gnetId": 14876,
   "graphTooltip": 0,
   "iteration": 1640278678868,
-  "links": [],
+  "links": [
+    {
+      "title": "Istio dashboards",
+      "type": "dashboards",
+      "tags": [
+        "istio"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ],
   "liveNow": false,
   "panels": [
     {
@@ -131,7 +143,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -142,9 +154,11 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "sum (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__interval]))  ",
+          "expr": "sum (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__range]))  ",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "timeFrom": "24h",
@@ -196,7 +210,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -211,9 +225,11 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (status_code) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} \n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`  | __error__=\"\"\n | status_code =~\"0|2..|3..|4..|5..\" \n[$__interval])) ",
+          "expr": "sum by (status_code) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} \n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`  | __error__=\"\"\n | status_code =~\"0|2..|3..|4..|5..\" \n[$__range])) ",
           "legendFormat": "{{status_code}}",
-          "refId": "A"
+          "refId": "A",
+          "instant": true,
+          "range": false
         }
       ],
       "title": "Requests per status code",
@@ -261,7 +277,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -272,7 +288,7 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "bytes_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__interval])",
+          "expr": "sum(bytes_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__range]))",
           "instant": true,
           "legendFormat": "$label_value",
           "range": false,
@@ -322,7 +338,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -333,9 +349,11 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "sum by (upstream_cluster) (sum_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| unwrap bytes_sent\n|  __error__=\"\"\n[$__interval]))",
+          "expr": "sum by (upstream_cluster) (sum_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| unwrap bytes_sent\n|  __error__=\"\"\n[$__range]))",
           "hide": false,
-          "refId": "B"
+          "refId": "B",
+          "instant": true,
+          "range": false
         }
       ],
       "title": "Total Bytes Sent",
@@ -380,7 +398,7 @@
         "type": "loki",
         "uid": "loki"
       },
-      "description": "",
+      "description": "Distinct forwarded addresses, with downstream peer fallback; not a count of individual people.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -414,7 +432,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -425,13 +443,15 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "count (sum by (downstream_remote_address) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n[$__interval])))",
+          "expr": "count(sum by (visitor_ip) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` | label_format visitor_ip=`{{ if or (eq .forward_for \"-\") (eq .forward_for \"\") }}{{ regexReplaceAll \":[0-9]+$\" .downstream_remote_address \"\" }}{{ else }}{{ .forward_for }}{{ end }}` | __error__=\"\" [$__range])))",
           "hide": false,
-          "refId": "B"
+          "refId": "B",
+          "instant": true,
+          "range": false
         }
       ],
       "timeFrom": "5m",
-      "title": "Realtime visitors ",
+      "title": "Active client addresses",
       "transformations": [],
       "type": "stat"
     },
@@ -476,7 +496,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "sum"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -487,7 +507,7 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__interval])",
+          "expr": "sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__range]))",
           "instant": true,
           "range": false,
           "refId": "A"
@@ -545,7 +565,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "max"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -556,9 +576,11 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` \n| status_code >= 500 |__error__=\"\" [$__interval]))\n/\n(sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` \n| __error__=\"\" [$__interval])) / 100)",
+          "expr": "((sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` \n| status_code >= 500 |__error__=\"\" [$__range]))) or (0 * (sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` \n| __error__=\"\" [$__range])) / 100))) / (sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` \n| __error__=\"\" [$__range])) / 100)",
           "hide": false,
-          "refId": "B"
+          "refId": "B",
+          "instant": true,
+          "range": false
         }
       ],
       "timeFrom": "1h",
@@ -610,7 +632,7 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "last"
+            "lastNotNull"
           ],
           "fields": "",
           "values": false
@@ -625,7 +647,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time(({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} |~ \"Googlebot|Slack.+\")[$__interval])) / (sum(count_over_time(({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} !~ \"Googlebot|Slack.+\")[$__interval])) / 100)",
+          "expr": "100 * (sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} |~ \"Googlebot|Slack.+\" [$__range])) or (0 * sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__range])))) / sum(count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}[$__range]))",
           "instant": true,
           "legendFormat": "",
           "range": false,
@@ -782,13 +804,13 @@
         {
           "expr": "quantile_over_time(0.95,{job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| unwrap duration \n|  __error__=\"\"  [$__interval]) by (authority)",
           "hide": false,
-          "legendFormat": "95th percentile",
+          "legendFormat": "{{authority}} p95",
           "refId": "A"
         },
         {
           "expr": "max by (authority) (max_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` \n| unwrap duration \n|  __error__=\"\"  [$__interval]))",
           "hide": false,
-          "legendFormat": "max latency",
+          "legendFormat": "{{authority}} max",
           "refId": "B"
         }
       ],
@@ -1096,14 +1118,15 @@
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "max_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}\n!~ `.ico|.svg|.css|.png|.txt|.js|.xml`\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| unwrap duration\n| status_code = 200 and path != \"/\" \n| __error__=\"\" [1h]) by (path)",
+          "expr": "topk(10, max_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"}\n!~ `.ico|.svg|.css|.png|.txt|.js|.xml`\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| unwrap duration\n| status_code = 200 and path != \"/\" \n| __error__=\"\" [$__range]) by (path))",
           "hide": false,
           "legendFormat": "{{path}} ",
-          "refId": "B"
+          "refId": "B",
+          "instant": true,
+          "range": false
         }
       ],
-      "timeFrom": "1h",
-      "title": "Top 10 paths by duration in last 1h",
+      "title": "Top 10 paths by maximum duration",
       "transformations": [
         {
           "id": "organize",
@@ -1316,14 +1339,19 @@
         "tooltip": {
           "mode": "single"
         },
-        "xTickLabelRotation": 0
+        "xTickLabelRotation": 0,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
       },
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "topk(10, sum by (path) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} \n!~ `.ico|.svg|.css|.png|.txt|.js|.xml`\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| status_code = 200 and path != \"/\" \n| __error__=\"\" [7d])))",
+          "expr": "topk(10, sum by (path) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} \n!~ `.ico|.svg|.css|.png|.txt|.js|.xml`\n| pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| status_code = 200 and path != \"/\" \n| __error__=\"\" [$__range])))",
           "instant": true,
-          "legendFormat": "{{request_uri}}",
+          "legendFormat": "{{path}}",
           "range": false,
           "refId": "A"
         }
@@ -1414,14 +1442,19 @@
         "tooltip": {
           "mode": "single"
         },
-        "xTickLabelRotation": 0
+        "xTickLabelRotation": 0,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
       },
       "pluginVersion": "8.3.2",
       "targets": [
         {
-          "expr": "topk(10, sum by (agent) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| __error__=\"\" [6h])))",
+          "expr": "topk(10, sum by (agent) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",$label_name=~\"${label_value:regex}\",instance=~\"${instance:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>`\n| __error__=\"\" [$__range])))",
           "instant": true,
-          "legendFormat": "{{http_user_agent}}",
+          "legendFormat": "{{agent}}",
           "range": false,
           "refId": "A"
         }

@@ -1,0 +1,244 @@
+{
+  "uid": "istio-egress",
+  "title": "Istio Egress",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "istio",
+    "gitops",
+    "egress"
+  ],
+  "description": "Egress gateway traffic and blocked outbound observations. REGISTRY_ONLY block_all responses occur in application sidecars; choose their namespace to inspect them. HTTP 443 registration alone does not route HTTPS through the gateway.",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "namespace",
+        "label": "Log namespaces",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "query": "label_values({job=\"integrations/istio\",log_type=\"access\"}, namespace)",
+        "refresh": 1,
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Egress gateway HTTP requests by host and status",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (cluster, destination_service_name, response_code) (rate(istio_requests_total{job=\"integrations/istio\",namespace=\"istio-gateways\",pod=~\".*egressgateway.*\",reporter=\"source\"}[$__rate_interval]))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "range": true
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Egress gateway p95 latency",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95,sum by (cluster, destination_service_name, le) (rate(istio_request_duration_milliseconds_bucket{job=\"integrations/istio\",namespace=\"istio-gateways\",pod=~\".*egressgateway.*\",reporter=\"source\"}[$__rate_interval])))",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "range": true
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Blocked outbound observations",
+      "type": "timeseries",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (authority, namespace) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",namespace=~\"${namespace:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` | __error__=\"\" | route_name=\"block_all\" [$__interval]))",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "range": true
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Response flags and details",
+      "type": "timeseries",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (response_flags, response_code_details) (count_over_time({job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",namespace=~\"${namespace:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` | __error__=\"\" | response_flags!=\"-\" [$__interval]))",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "range": true
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Recent egress and blocked requests",
+      "type": "logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{job=\"integrations/istio\",container=\"istio-proxy\",log_type=\"access\",namespace=~\"${namespace:regex}\"} | pattern `<_> \"<method> <path> <protocol>\" <status_code> <response_flags> <response_code_details> <connection_termination_details> \"<failure_reason>\" <bytes_received> <bytes_sent> <duration> <upstream_time> \"<forward_for>\" \"<agent>\" \"<req_id>\" \"<authority>\" \"<upstream_host>\" <upstream_cluster> <upstream_local_address> <downstream_local_address> <downstream_remote_address> <requested_server_name> <route_name> traceID=<trace_id>` | __error__=\"\" | route_name=\"block_all\" or pod=~\".*egressgateway.*\" | line_format `{{.method}} {{.authority}}{{.path}} status={{.status_code}} flags={{.response_flags}} details={{.response_code_details}} route={{.route_name}} traceID={{.trace_id}}`",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "range": true
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Istio dashboards",
+      "type": "dashboards",
+      "tags": [
+        "istio"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
+    }
+  ]
+}

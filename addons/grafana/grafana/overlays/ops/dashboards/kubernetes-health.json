@@ -204,7 +204,8 @@
           "displayMode": "list",
           "placement": "bottom"
         }
-      }
+      },
+      "description": "Requires kubelet_volume_stats metrics from the volume driver. Docker Desktop local-path volumes may not export these; an empty panel means capacity telemetry is unavailable, not zero usage."
     },
     {
       "id": 6,
@@ -307,6 +308,19 @@
           "placement": "bottom"
         }
       }
+    }
+  ],
+  "links": [
+    {
+      "title": "Istio dashboards",
+      "type": "dashboards",
+      "tags": [
+        "istio"
+      ],
+      "asDropdown": true,
+      "includeVars": false,
+      "keepTime": true,
+      "targetBlank": false
     }
   ]
 }
