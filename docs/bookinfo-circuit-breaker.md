@@ -71,6 +71,9 @@ kubectl -n bookinfo exec deployment/productpage-v1 -c istio-proxy -- \
 kubectl -n bookinfo logs deployment/productpage-v1 -c istio-proxy --since=2m
 ```
 
+Some Envoy counters may be absent when the mesh proxy statistics matcher does
+not include them; use the `UO` access-log evidence in that case.
+
 Pool overflow increments `upstream_rq_pending_overflow` and/or
 `upstream_cx_overflow`; rejected requests normally carry `UO` in the access-log
 response flags. `UH` instead indicates no healthy upstream. The concurrency test
@@ -82,3 +85,12 @@ To disable the lab, remove `circuit-breaker.yaml` from the dev kustomization and
 commit the change; Argo CD prunes the DestinationRule.
 
 Reference: https://istio.io/latest/docs/tasks/traffic-management/circuit-breaking/
+
+## Verified lab result
+
+A 200-request run with 32 workers returned 42 HTTP 200 and 158 HTTP 503
+responses. Productpage Envoy logs showed `503 UO` and
+`upstream_reset_before_response_started{overflow}`. A subsequent sequential
+request returned HTTP 200. The loaded Envoy cluster confirmed all three pool
+thresholds were 1 and outlier detection was configured. Outlier ejection itself
+was not fault-tested.
