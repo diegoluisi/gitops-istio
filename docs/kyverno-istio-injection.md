@@ -53,9 +53,8 @@ References:
 
 The Helm values use the official `ghcr.io/kyverno` image mirror because initial
 pulls from `reg.kyverno.io` failed in this Docker Desktop environment. Policy
-admission defaults are explicit to avoid GitOps drift. The ops ApplicationSet
-ignores only the API-defaulted `conversion.strategy=None` stanza on Kyverno CRDs;
-it does not ignore conversion webhook settings.
+admission defaults are explicit to avoid GitOps drift. Kustomize explicitly renders `conversion.strategy=None` on the pinned chart's CEL
+policy CRDs to match Kubernetes defaulting without ignoring conversion settings.
 
 Live validation completed: all four controllers became available; a dry-run
 namespace received the enabled label; existing eligible namespaces were backfilled;
