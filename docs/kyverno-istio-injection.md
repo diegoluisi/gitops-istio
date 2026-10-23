@@ -50,3 +50,16 @@ that a workload has an injected proxy; inspect its newly created pods.
 References:
 - https://kyverno.io/docs/policy-types/cluster-policy/mutate/
 - https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/
+
+The Helm values use the official `ghcr.io/kyverno` image mirror because initial
+pulls from `reg.kyverno.io` failed in this Docker Desktop environment. Policy
+admission defaults are explicit to avoid GitOps drift. The ops ApplicationSet
+ignores only the API-defaulted `conversion.strategy=None` stanza on Kyverno CRDs;
+it does not ignore conversion webhook settings.
+
+Live validation completed: all four controllers became available; a dry-run
+namespace received the enabled label; existing eligible namespaces were backfilled;
+and a dry-run Pod in grafana received istio-proxy. Excluded namespace labels were
+unchanged. Existing workloads still need their normal controlled rollout to inject
+sidecars. ClusterPolicy is supported by the pinned release but deprecated upstream;
+a future Kyverno upgrade should include migration to the CEL policy types.

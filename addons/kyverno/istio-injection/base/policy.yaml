@@ -6,9 +6,13 @@ metadata:
     policies.kyverno.io/title: Enable Istio sidecar injection
     policies.kyverno.io/subject: Namespace
 spec:
+  admission: true
+  emitWarning: false
+  validationFailureAction: Audit
   background: true
   rules:
     - name: label-new-and-updated-namespaces
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
@@ -25,6 +29,7 @@ spec:
             labels:
               istio-injection: enabled
     - name: label-existing-namespaces
+      skipBackgroundRequests: true
       match:
         any:
           - resources:
