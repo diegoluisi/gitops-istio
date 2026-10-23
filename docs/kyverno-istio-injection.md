@@ -1,16 +1,20 @@
 # Namespace sidecar injection with Kyverno
 
-`kyverno-ops` installs the pinned chart and the CEL `MutatingPolicy`
-`istio-injection`, stored at
-`addons/kyverno/kyverno/base/policies/istio/istio-injection.yaml` and listed in the
+`kyverno-ops` installs the pinned chart and two CEL MutatingPolicies from
+`addons/kyverno/kyverno/base/policies/istio/istio-injection.yaml`, listed in the
 base Kustomization. The deprecated ClusterPolicy and separate policy Application
 have been retired.
 
-The policy sets `istio-injection=enabled` on Namespace CREATE/UPDATE and enables
-background mutation of existing namespaces. Admission CEL match conditions exclude infrastructure, and the mutation itself
-returns an empty object for excluded target names. This also protects background
-mutation when Kyverno resolves existing namespaces. The background controller has namespace get/list/watch/
-update/patch permissions. The policy syncs after controller resources (wave 10).
+- `istio-injection` labels Namespace CREATE/UPDATE admission requests.
+- `istio-injection-existing` uses eligible Namespace admission events to trigger
+  mutation of existing namespaces. Admission stays enabled so events are received;
+  its target selector filters `kubernetes.io/metadata.name` before mutations run.
+
+The admission match conditions and background target selector use the same
+infrastructure exclusions. Do not rely on a trigger's name to exclude background
+targets: trigger and target evaluation have different scopes. The background
+controller has namespace get/list/watch/update/patch permissions. Both policies
+sync after controller resources (wave 10).
 
 Excluded namespaces:
 
@@ -38,7 +42,7 @@ Deploy kyverno-ops; the policy is included in the same Application. Check:
 
 ```sh
 kubectl -n kyverno get deployments
-kubectl get mutatingpolicy istio-injection
+kubectl get mutatingpolicy istio-injection istio-injection-existing
 kubectl get namespaces -L istio-injection,istio.io/rev
 kubectl create namespace injection-check --dry-run=server -o yaml
 ```
@@ -77,3 +81,9 @@ Event counters may be absent until a matching event occurs. Historical deprecate
 API requests remain visible within the selected range after migration. Static
 Service scraping matches this lab's single-replica controllers; switch to
 per-endpoint discovery when scaling controllers to multiple replicas.
+
+Background migration regression test: a disposable namespace was created, its
+injection label removed using the background-controller identity (which bypasses
+its own admission requests), and an eligible Namespace UPDATE triggered backfill.
+The test namespace regained the label and all excluded namespaces remained
+unchanged. The temporary namespace was removed afterward.
