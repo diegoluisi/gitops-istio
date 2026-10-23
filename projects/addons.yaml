@@ -12,6 +12,8 @@ spec:
     - https://github.com/diegoluisi/gitops-istio.git
   destinations:
     - server: https://kubernetes.default.svc
+      namespace: kyverno
+    - server: https://kubernetes.default.svc
       namespace: istio-system
     - server: https://kubernetes.default.svc
       namespace: istio-gateways

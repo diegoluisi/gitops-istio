@@ -1,0 +1,22 @@
+admissionController:
+  replicas: 1
+  podLabels:
+    sidecar.istio.io/inject: "false"
+backgroundController:
+  replicas: 1
+  podLabels:
+    sidecar.istio.io/inject: "false"
+  rbac:
+    clusterRole:
+      extraResources:
+        - apiGroups: [""]
+          resources: [namespaces]
+          verbs: [get, list, watch, update, patch]
+cleanupController:
+  replicas: 1
+  podLabels:
+    sidecar.istio.io/inject: "false"
+reportsController:
+  replicas: 1
+  podLabels:
+    sidecar.istio.io/inject: "false"
