@@ -92,8 +92,7 @@ alerting:
     groups:
     - orgId: 1
       name: istio-integration
-      folder: ""
-      foldersFromFilesStructure: true
+      folder: Istio
       interval: 1m
       rules:
       - uid: istio-latency
