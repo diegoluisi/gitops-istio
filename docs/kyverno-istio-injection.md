@@ -7,9 +7,9 @@ base Kustomization. The deprecated ClusterPolicy and separate policy Application
 have been retired.
 
 The policy sets `istio-injection=enabled` on Namespace CREATE/UPDATE and enables
-background mutation of existing namespaces. Admission and target resource rules
-repeat the same exclusions, so background mutation cannot label infrastructure
-namespaces accidentally. The background controller has namespace get/list/watch/
+background mutation of existing namespaces. Admission CEL match conditions exclude infrastructure, and the mutation itself
+returns an empty object for excluded target names. This also protects background
+mutation when Kyverno resolves existing namespaces. The background controller has namespace get/list/watch/
 update/patch permissions. The policy syncs after controller resources (wave 10).
 
 Excluded namespaces:
@@ -70,7 +70,7 @@ Alloy scrapes all four Kyverno metrics Services on port 8000 every 15 seconds,
 using registered Service DNS addresses compatible with REGISTRY_ONLY. Metrics use
 job `integrations/kyverno`, controller, cluster and namespace labels. The Grafana
 Kyverno Overview dashboard uses Mimir and covers scrape health, admission requests
-and p95 latency, policy outcomes and latency, active rules, API deprecations,
+and p95 latency, policy outcomes and latency, observed mutating policies, API deprecations,
 controller reconciliations, CPU, memory, goroutines and API client traffic.
 
 Event counters may be absent until a matching event occurs. Historical deprecated

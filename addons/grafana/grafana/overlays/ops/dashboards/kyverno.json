@@ -196,7 +196,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum by (policy_name, rule_result) (rate(kyverno_policy_results_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval]))"
+          "expr": "sum by (policy_name, result) (rate(kyverno_mutating_policy_results_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval]))"
         }
       ],
       "options": {
@@ -234,7 +234,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "histogram_quantile(0.95,sum by (policy_name, le) (rate(kyverno_policy_execution_duration_seconds_bucket{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval])))"
+          "expr": "histogram_quantile(0.95,sum by (policy_name, le) (rate(kyverno_mutating_policy_execution_duration_seconds_bucket{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval])))"
         }
       ],
       "options": {
@@ -247,7 +247,7 @@
     },
     {
       "id": 6,
-      "title": "Active policy rules",
+      "title": "Observed mutating policies",
       "type": "timeseries",
       "datasource": {
         "type": "prometheus",
@@ -272,7 +272,7 @@
             "type": "prometheus",
             "uid": "mimir"
           },
-          "expr": "sum(max by (policy_name, rule_name) (kyverno_policy_rule_info_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}))"
+          "expr": "count(count by (policy_name) (kyverno_mutating_policy_results_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}))"
         }
       ],
       "options": {
@@ -281,7 +281,7 @@
           "placement": "bottom"
         }
       },
-      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+      "description": "Counts policies with emitted CEL evaluation metrics in the selected controller processes; not an inventory of configured policies."
     },
     {
       "id": 7,
