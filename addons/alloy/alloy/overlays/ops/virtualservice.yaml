@@ -1,0 +1,25 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: alloy-ingress
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - istio-gateways/ingressgateway
+  http:
+    - name: alloy-redirect
+      match:
+        - uri:
+            exact: /alloy
+      redirect:
+        uri: /alloy/
+    - name: alloy
+      match:
+        - uri:
+            prefix: /alloy/
+      route:
+        - destination:
+            host: alloy.alloy.svc.cluster.local
+            port:
+              number: 12345

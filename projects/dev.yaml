@@ -43,6 +43,8 @@ spec:
     metadata:
       name: '{{ index .path.segments 1 }}-{{ .path.basename }}'
       namespace: argocd
+      annotations:
+        notifications.argoproj.io/subscribe.on-dev-deployed.grafana: ""
       labels:
         app.kubernetes.io/part-of: apps
         cluster: '{{ .path.basename }}'

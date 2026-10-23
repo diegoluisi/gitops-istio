@@ -24892,6 +24892,27 @@ metadata:
     app.kubernetes.io/part-of: argocd
   name: argocd-notifications-cm
   namespace: argocd
+data:
+  service.webhook.grafana: |
+    url: http://grafana.grafana.svc.cluster.local/grafana/api/annotations
+    headers:
+      - name: Content-Type
+        value: application/json
+  template.dev-deployed: |
+    webhook:
+      grafana:
+        method: POST
+        body: |
+          {
+            "text": "Deployed {{.app.metadata.name}} to {{.app.spec.destination.namespace}} (revision {{.app.status.operationState.syncResult.revision}})",
+            "tags": ["argocd", "deployment", "dev", "app:{{.app.metadata.name}}"]
+          }
+  trigger.on-dev-deployed: |
+    - description: Mark successful and healthy dev deployments in Grafana
+      oncePer: app.status.operationState.finishedAt
+      when: app.spec.project == 'dev' and app.status.operationState.phase in ['Succeeded'] and app.status.sync.status == 'Synced' and app.status.health.status == 'Healthy'
+      send:
+        - dev-deployed
 ---
 apiVersion: v1
 kind: ConfigMap

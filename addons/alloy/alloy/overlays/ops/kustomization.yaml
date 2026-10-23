@@ -3,3 +3,4 @@ kind: Kustomization
 namespace: alloy
 resources:
   - ../../base
+  - virtualservice.yaml

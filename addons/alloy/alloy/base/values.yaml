@@ -4,6 +4,7 @@ controller:
   replicas: 1
 alloy:
   enableReporting: false
+  uiPathPrefix: /alloy
   extraPorts:
     - name: grpc-otlp
       port: 4317
