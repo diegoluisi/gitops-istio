@@ -15,7 +15,5 @@ patches:
       kind: CustomResourceDefinition
       name: '.*\.policies\.kyverno\.io'
     patch: |-
-      - op: add
-        path: /spec/conversion
-        value:
-          strategy: None
+      - op: remove
+        path: /metadata/labels

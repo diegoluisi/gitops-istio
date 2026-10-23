@@ -53,8 +53,9 @@ References:
 
 The Helm values use the official `ghcr.io/kyverno` image mirror because initial
 pulls from `reg.kyverno.io` failed in this Docker Desktop environment. Policy
-admission defaults are explicit to avoid GitOps drift. Kustomize explicitly renders `conversion.strategy=None` on the pinned chart's CEL
-policy CRDs to match Kubernetes defaulting without ignoring conversion settings.
+admission defaults are explicit to avoid GitOps drift. Kustomize removes empty `metadata.labels` maps emitted on the pinned chart's CEL
+policy CRDs. Kubernetes drops those empty maps, which otherwise causes persistent
+Argo CD drift. No CRD schema or conversion settings are ignored.
 
 Live validation completed: all four controllers became available; a dry-run
 namespace received the enabled label; existing eligible namespaces were backfilled;
