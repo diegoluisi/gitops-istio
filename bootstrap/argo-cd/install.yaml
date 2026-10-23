@@ -24863,6 +24863,10 @@ metadata:
 ---
 apiVersion: v1
 kind: ConfigMap
+data:
+  otlp.address: "alloy.alloy.svc.cluster.local:4317"
+  otlp.insecure: "true"
+  otlp.attrs: "k8s.namespace.name:argocd,k8s.cluster.name:ops"
 metadata:
   labels:
     app.kubernetes.io/name: argocd-cmd-params-cm
@@ -25695,6 +25699,8 @@ spec:
       app.kubernetes.io/name: argocd-repo-server
   template:
     metadata:
+      annotations:
+        checksum/otlp-config: "b66578d776712528b6e2b4de574f49ebdb46f27e318d9bf60e5342aaf95a957b"
       labels:
         app.kubernetes.io/name: argocd-repo-server
     spec:
@@ -26067,6 +26073,8 @@ spec:
       app.kubernetes.io/name: argocd-server
   template:
     metadata:
+      annotations:
+        checksum/otlp-config: "b66578d776712528b6e2b4de574f49ebdb46f27e318d9bf60e5342aaf95a957b"
       labels:
         app.kubernetes.io/name: argocd-server
     spec:
@@ -26478,6 +26486,8 @@ spec:
   serviceName: argocd-application-controller
   template:
     metadata:
+      annotations:
+        checksum/otlp-config: "b66578d776712528b6e2b4de574f49ebdb46f27e318d9bf60e5342aaf95a957b"
       labels:
         app.kubernetes.io/name: argocd-application-controller
     spec:
