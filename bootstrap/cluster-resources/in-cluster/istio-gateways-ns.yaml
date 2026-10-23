@@ -6,4 +6,3 @@ metadata:
     argocd.argoproj.io/sync-options: Prune=false
   labels:
     istio.io/rev: default
-    istio.io/dataplane-mode: none

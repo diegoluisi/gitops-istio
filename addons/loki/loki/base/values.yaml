@@ -21,6 +21,8 @@ loki:
     retention_enabled: true
     delete_request_store: filesystem
 singleBinary:
+  podLabels:
+    sidecar.istio.io/inject: "true"
   replicas: 1
   persistence:
     enabled: true

@@ -1,3 +1,5 @@
 watchNamespace: ""
 cr:
   create: false
+podLabels:
+  sidecar.istio.io/inject: "true"
