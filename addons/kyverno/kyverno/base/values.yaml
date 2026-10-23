@@ -1,3 +1,6 @@
+global:
+  image:
+    registry: ghcr.io
 admissionController:
   replicas: 1
   podLabels:
