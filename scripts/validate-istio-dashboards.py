@@ -21,6 +21,15 @@ def expand(q, file):
  q=re.sub(r'\$\{([A-Za-z_][A-Za-z_0-9]*)(?::([^}]+))?\}',brace,q)
  q=re.sub(r'\$([A-Za-z_][A-Za-z_0-9]*)',lambda m:values.get(m.group(1),'.+'),q)
  return q
+def fetch_json(url):
+ for attempt in range(4):
+  try:
+   with urllib.request.urlopen(url,timeout=25) as response:
+    return json.load(response)
+  except urllib.error.HTTPError as error:
+   if error.code not in (429,503) or attempt==3:
+    raise
+   time.sleep(0.5 * 2**attempt)
 def run(item):
  file,title,typ,q=item; q=expand(q,file)
  base={'prometheus':'http://127.0.0.1:19009/prometheus/api/v1/query','loki':'http://127.0.0.1:13100/loki/api/v1/query','tempo':'http://127.0.0.1:13200/api/search'}[typ]
@@ -28,23 +37,28 @@ def run(item):
  if typ=='loki' and not re.match(r'\s*(topk|sum|count|bytes_over_time|quantile_over_time|max|max_over_time|count_over_time)',q):
   base+='_range'; params.update({'start':int((time.time()-3600)*1e9),'end':int(time.time()*1e9),'limit':5})
  try:
-  d=json.load(urllib.request.urlopen(base+'?'+urllib.parse.urlencode(params),timeout=25))
+  d=fetch_json(base+'?'+urllib.parse.urlencode(params))
   values=d.get('traces',[]) if typ=='tempo' else d.get('data',{}).get('result',[])
   return {'file':file,'panel':title,'type':typ,'status':'ok','series':len(values),'query':q,'sample':values[:1]}
  except Exception as e:
   detail=e.read().decode() if isinstance(e,urllib.error.HTTPError) else str(e)
   return {'file':file,'panel':title,'type':typ,'status':'error','error':detail,'query':q}
+def panels_in(items):
+ for panel in items:
+  yield panel
+  yield from panels_in(panel.get('panels',[]))
 items=[]
 for p in root.rglob('*.json'):
  d=json.loads(p.read_text())
- for panel in d.get('panels',[]):
+ for panel in panels_in(d.get('panels',[])):
   for t in panel.get('targets',[]):
    if t.get('hide'):continue
-   typ=t.get('datasource',panel.get('datasource',{})).get('type','prometheus')
+   ds=t.get('datasource') or panel.get('datasource') or {}
+   typ=ds.get('type','prometheus') if isinstance(ds,dict) else ('loki' if 'loki' in ds.lower() else 'prometheus')
    q=t.get('expr',t.get('query',''))
    if typ not in ('prometheus','loki','tempo') or not q or t.get('queryType')=='traceId':continue
    items.append((str(p.relative_to(root)),panel['title'],typ,q))
-with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool: results=list(pool.map(run,items))
+with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool: results=list(pool.map(run,items))
 
 for r in results:print(r['status'],r.get('series',''),r['file'],r['panel'],r.get('error',''))
 

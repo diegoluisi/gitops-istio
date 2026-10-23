@@ -12,6 +12,9 @@ configMapGenerator:
       annotations:
         grafana_folder: "/tmp/dashboards/Istio"
     files:
+      - default-mesh.json=dashboards/istio/default-mesh.json
+      - default-service.json=dashboards/istio/default-service.json
+      - default-workload.json=dashboards/istio/default-workload.json
       - istio-ambient.json=dashboards/istio/istio-ambient.json
       - istio-control-plane.json=dashboards/istio/istio-control-plane.json
       - istio-egress.json=dashboards/istio/istio-egress.json

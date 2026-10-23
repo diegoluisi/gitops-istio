@@ -46,3 +46,9 @@ Query smoke checks: `python3 scripts/validate-istio-dashboards.py` with the
 Mimir/Loki/Tempo port-forwards documented in `docs/istio-dashboards.md`. Empty
 results are reported separately from execution errors; a successful query is not
 proof that an optional component exists or every browser visualization is correct.
+
+Three existing manually imported Istio dashboards (Mesh, Service and Workload)
+were exported from the running Grafana instance without changing their queries or
+UIDs. They are now provisioned in the Istio folder as default-*.json; the Workload
+dashboard previously lived in General. Their exported dashboard metadata retains
+upstream descriptions and version information.
