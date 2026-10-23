@@ -1,0 +1,515 @@
+{
+  "uid": "kyverno-overview",
+  "title": "Kyverno Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "kyverno",
+    "gitops"
+  ],
+  "description": "Kyverno controller health and admission/policy telemetry, collected by Alloy and stored in Mimir. Empty event panels do not imply zero errors. Single-replica lab configuration uses metrics Services.",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "cluster",
+        "label": "Cluster",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "mimir"
+        },
+        "query": "label_values(up{job=\"integrations/kyverno\"}, cluster)",
+        "refresh": 1,
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      },
+      {
+        "name": "controller",
+        "label": "Controller",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "mimir"
+        },
+        "query": "label_values(up{job=\"integrations/kyverno\"}, controller)",
+        "refresh": 1,
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": true,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Controller scrape health",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "up{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 2,
+      "title": "Admission requests",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum by (controller, request_allowed, request_webhook) (rate(kyverno_admission_requests_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval]))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 3,
+      "title": "Admission review p95 latency",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "histogram_quantile(0.95,sum by (controller, request_webhook, le) (rate(kyverno_admission_review_duration_seconds_bucket{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval])))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 4,
+      "title": "Policy evaluations by result",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum by (policy_name, rule_result) (rate(kyverno_policy_results_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval]))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 5,
+      "title": "Policy evaluation p95 latency",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "histogram_quantile(0.95,sum by (policy_name, le) (rate(kyverno_policy_execution_duration_seconds_bucket{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval])))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 6,
+      "title": "Active policy rules",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum(max by (policy_name, rule_name) (kyverno_policy_rule_info_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 7,
+      "title": "Deprecated API requests",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum by (resource_kind) (increase(kyverno_deprecated_api_requests_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__range]))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 8,
+      "title": "Controller reconciliation rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum by (controller, controller_name) (rate(kyverno_controller_reconcile_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval]))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 9,
+      "title": "Controller CPU",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cores"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum by (controller) (rate(process_cpu_seconds_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval]))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 10,
+      "title": "Controller resident memory",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "max by (controller) (process_resident_memory_bytes{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"})"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 11,
+      "title": "Controller goroutines",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "max by (controller) (go_goroutines{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"})"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    },
+    {
+      "id": 12,
+      "title": "API client requests",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "mimir"
+          },
+          "expr": "sum by (controller) (rate(kyverno_client_queries_total{job=\"integrations/kyverno\",cluster=~\"${cluster:regex}\",controller=~\"${controller:regex}\"}[$__rate_interval]))"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        }
+      },
+      "description": "Event metrics can be absent until the first matching event; use scrape health to distinguish missing telemetry. Deprecated API counts include earlier requests in the selected time range."
+    }
+  ]
+}

@@ -119,6 +119,28 @@ alloy:
         scrape_interval = "15s"
         forward_to = [prometheus.remote_write.mimir.receiver]
       }
+      prometheus.scrape "kyverno" {
+        targets = [
+          {"__address__" = "kyverno-svc-metrics.kyverno.svc.cluster.local:8000", "controller" = "admission"},
+          {"__address__" = "kyverno-background-controller-metrics.kyverno.svc.cluster.local:8000", "controller" = "background"},
+          {"__address__" = "kyverno-cleanup-controller-metrics.kyverno.svc.cluster.local:8000", "controller" = "cleanup"},
+          {"__address__" = "kyverno-reports-controller-metrics.kyverno.svc.cluster.local:8000", "controller" = "reports"},
+        ]
+        job_name = "integrations/kyverno"
+        scrape_interval = "15s"
+        forward_to = [prometheus.relabel.kyverno.receiver]
+      }
+      prometheus.relabel "kyverno" {
+        forward_to = [prometheus.remote_write.mimir.receiver]
+        rule {
+          target_label = "cluster"
+          replacement = "ops"
+        }
+        rule {
+          target_label = "namespace"
+          replacement = "kyverno"
+        }
+      }
       prometheus.remote_write "mimir" {
         endpoint {
           url = "http://mimir.mimir.svc.cluster.local:9009/api/v1/push"

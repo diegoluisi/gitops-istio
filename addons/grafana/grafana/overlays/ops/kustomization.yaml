@@ -19,3 +19,4 @@ configMapGenerator:
       - istio-services.json=dashboards/istio-services.json
       - istio-workloads.json=dashboards/istio-workloads.json
       - istio-loki-14876.json=dashboards/istio-loki-14876.json
+      - kyverno.json=dashboards/kyverno.json

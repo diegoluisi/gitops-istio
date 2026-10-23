@@ -1,0 +1,49 @@
+apiVersion: policies.kyverno.io/v1
+kind: MutatingPolicy
+metadata:
+  name: istio-injection
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    policies.kyverno.io/title: Enable Istio sidecar injection
+spec:
+  failurePolicy: Fail
+  evaluation:
+    admission:
+      enabled: true
+    background:
+      enabled: true
+    mutateExisting:
+      enabled: true
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [namespaces]
+    excludeResourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [CREATE, UPDATE]
+        resources: [namespaces]
+        resourceNames: [kube-system, kube-public, kube-node-lease, istio-system, istio-gateways, kyverno, argocd, local-path-storage]
+  targetMatchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [UPDATE]
+        resources: [namespaces]
+    excludeResourceRules:
+      - apiGroups: [""]
+        apiVersions: [v1]
+        operations: [UPDATE]
+        resources: [namespaces]
+        resourceNames: [kube-system, kube-public, kube-node-lease, istio-system, istio-gateways, kyverno, argocd, local-path-storage]
+  mutations:
+    - patchType: ApplyConfiguration
+      applyConfiguration:
+        expression: >-
+          Object{
+            metadata: Object.metadata{
+              labels: {"istio-injection": "enabled"}
+            }
+          }

@@ -1,14 +1,16 @@
 # Namespace sidecar injection with Kyverno
 
-`kyverno-ops` installs the pinned Kyverno Helm chart. `istio-injection-ops`
-installs `enable-istio-injection`. Both are discovered by the existing ops
-ApplicationSet from `addons/kyverno/*/overlays/ops`.
+`kyverno-ops` installs the pinned chart and the CEL `MutatingPolicy`
+`istio-injection`, stored at
+`addons/kyverno/kyverno/base/policies/istio/istio-injection.yaml` and listed in the
+base Kustomization. The deprecated ClusterPolicy and separate policy Application
+have been retired.
 
-The admission rule sets `istio-injection=enabled` on Namespace CREATE/UPDATE.
-The background rule backfills existing namespaces on policy installation/update,
-and subsequently reconciles them. Its target preconditions repeat the exclusion
-list deliberately: admission exclusions do not constrain background targets.
-Background RBAC grants only the namespace read/update/patch permissions needed.
+The policy sets `istio-injection=enabled` on Namespace CREATE/UPDATE and enables
+background mutation of existing namespaces. Admission and target resource rules
+repeat the same exclusions, so background mutation cannot label infrastructure
+namespaces accidentally. The background controller has namespace get/list/watch/
+update/patch permissions. The policy syncs after controller resources (wave 10).
 
 Excluded namespaces:
 
@@ -32,12 +34,11 @@ order after the labels are present; do not restart all system workloads.
 Kiali currently runs in excluded istio-system and must be migrated out before it
 can receive a sidecar with the current CNI setup.
 
-Deploy the updated addons project and Kyverno first, then the policy. The policy
-Application retries while the CRD/webhook/RBAC become available. Check:
+Deploy kyverno-ops; the policy is included in the same Application. Check:
 
 ```sh
 kubectl -n kyverno get deployments
-kubectl get clusterpolicy enable-istio-injection
+kubectl get mutatingpolicy istio-injection
 kubectl get namespaces -L istio-injection,istio.io/rev
 kubectl create namespace injection-check --dry-run=server -o yaml
 ```
@@ -61,5 +62,18 @@ Live validation completed: all four controllers became available; a dry-run
 namespace received the enabled label; existing eligible namespaces were backfilled;
 and a dry-run Pod in grafana received istio-proxy. Excluded namespace labels were
 unchanged. Existing workloads still need their normal controlled rollout to inject
-sidecars. ClusterPolicy is supported by the pinned release but deprecated upstream;
-a future Kyverno upgrade should include migration to the CEL policy types.
+sidecars. The CEL policy uses policies.kyverno.io/v1, avoiding the deprecated ClusterPolicy API.
+
+## Monitoring
+
+Alloy scrapes all four Kyverno metrics Services on port 8000 every 15 seconds,
+using registered Service DNS addresses compatible with REGISTRY_ONLY. Metrics use
+job `integrations/kyverno`, controller, cluster and namespace labels. The Grafana
+Kyverno Overview dashboard uses Mimir and covers scrape health, admission requests
+and p95 latency, policy outcomes and latency, active rules, API deprecations,
+controller reconciliations, CPU, memory, goroutines and API client traffic.
+
+Event counters may be absent until a matching event occurs. Historical deprecated
+API requests remain visible within the selected range after migration. Static
+Service scraping matches this lab's single-replica controllers; switch to
+per-endpoint discovery when scaling controllers to multiple replicas.
