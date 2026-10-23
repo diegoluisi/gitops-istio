@@ -1,0 +1,35 @@
+---
+groups:
+- name: service-dashboard-recordings
+  interval: 30s
+  rules:
+  - expr: sum(rate(cortex_request_duration_seconds_bucket[1m])) by (le, cluster, job,
+      route)
+    record: cluster_job_route:cortex_request_duration_seconds_bucket:sum_rate
+  - expr: sum(rate(cortex_request_duration_seconds_sum[1m])) by (cluster, job, route)
+    record: cluster_job_route:cortex_request_duration_seconds_sum:sum_rate
+  - expr: sum(rate(cortex_request_duration_seconds_count[1m])) by (cluster, job, route)
+    record: cluster_job_route:cortex_request_duration_seconds_count:sum_rate
+  - expr: sum(rate(cortex_request_duration_seconds[1m])) by (cluster, job, route)
+    record: cluster_job_route:cortex_request_duration_seconds:sum_rate
+  - expr: 'sum by (cluster, namespace, job) (rate(cortex_distributor_received_samples_total[5m]))
+
+'
+    record: cluster_namespace_job:cortex_distributor_received_samples:rate5m
+  - expr: 'sum by (cluster, namespace, job) (rate(cortex_distributor_received_exemplars_total[5m]))
+
+'
+    record: cluster_namespace_job:cortex_distributor_received_exemplars:rate5m
+  - expr: 'sum by (cluster, job, integration) (rate(cortex_alertmanager_notifications_total[5m]))
+
+'
+    record: cluster_job_integration:cortex_alertmanager_notifications_total:rate5m
+  - expr: 'sum by (cluster, job, integration) (rate(cortex_alertmanager_notifications_failed_total[5m]))
+
+'
+    record: cluster_job_integration:cortex_alertmanager_notifications_failed_total:rate5m
+  - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job)
+    record: cluster_job:loki_request_duration_seconds_bucket:sum_rate
+  - expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, cluster, job,
+      route)
+    record: cluster_job_route:loki_request_duration_seconds_bucket:sum_rate

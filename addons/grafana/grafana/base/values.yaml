@@ -79,9 +79,11 @@ sidecar:
     label: grafana_dashboard
     searchNamespace: grafana
     folder: "/tmp/dashboards"
+    folderAnnotation: grafana_folder
     provider:
       name: gitops
-      folder: Istio
+      folder: ""
+      foldersFromFilesStructure: true
       disableDelete: false
       allowUiUpdates: false
 alerting:
@@ -90,7 +92,8 @@ alerting:
     groups:
     - orgId: 1
       name: istio-integration
-      folder: Istio
+      folder: ""
+      foldersFromFilesStructure: true
       interval: 1m
       rules:
       - uid: istio-latency

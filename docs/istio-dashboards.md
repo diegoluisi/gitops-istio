@@ -1,6 +1,6 @@
 # Istio dashboards
 
-The dashboards are provisioned by GitOps in Grafana's Istio folder. The collection
+The dashboards are provisioned by GitOps in Grafana's service folders. The collection
 covers the mesh, services, workloads, control plane/gateways, egress, Kubernetes
 health, access logs, and traces. Dashboard navigation preserves the time range.
 
@@ -74,3 +74,12 @@ these checks do not claim browser validation of an undeployed dashboard.
 References:
 - https://istio.io/latest/docs/ops/integrations/grafana/
 - https://istio.io/latest/docs/ops/best-practices/observability/
+
+## Service folders and upstream dashboards
+
+Dashboards now live under `dashboards/<service>/` in the Grafana ops overlay and
+are provisioned to Istio, Kubernetes, Argo CD, Kyverno, Mimir, Loki and Alloy folders.
+The upstream sources, pinned revisions and lab adaptations are documented in
+`addons/grafana/grafana/overlays/ops/dashboards/SOURCES.md`. The query checker
+recursively finds dashboards and substitutes service-specific variable defaults.
+New Argo CD scrapes and monolithic Mimir/Loki job labels are defined in Alloy.

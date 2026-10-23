@@ -6,13 +6,23 @@ not silently converted to zero; they can mean no matching traffic or absent metr
 """
 import json,pathlib,re,urllib.request,urllib.parse,time,concurrent.futures
 root=pathlib.Path(__file__).resolve().parents[1]/'addons/grafana/grafana/overlays/ops/dashboards'
-def expand(q):
- q=q.replace('$__rate_interval','5m').replace('$__interval','5m').replace('$__range','1h')
- q=q.replace('$label_name','namespace').replace('${search:doublequote}','""').replace('${minDuration:raw}','100ms').replace('${service:raw}','.*')
- q=re.sub(r'\$\{[^}]+\}', '.+',q); q=re.sub(r'\$(namespace|scrape_namespace|workload|service)\b','.+',q)
+def expand(q, file):
+ service=file.split('/')[0]
+ values={'__rate_interval':'5m','__interval':'5m','__range':'1h','__range_s':'3600','__interval_ms':'300000','__auto':'5m',
+         'namespace':service if service in ('argocd','mimir','loki','alloy','kyverno') else '.+',
+         'cluster':'https://kubernetes.default.svc' if service=='argocd' else 'ops',
+         'job':'.+','instance':'.+','kyvernoNS':'kyverno','groupby':'instance','grouping':'namespace,name,project',
+         'latency_metrics':'1','interval':'5m','label_name':'namespace','label_value':'.+','search':'',
+         'minDuration':'100ms','service':'.*','filters':''}
+ def brace(m):
+  name,fmt=m.group(1),m.group(2)
+  value=values.get(name,'.+')
+  return json.dumps(value) if fmt=='doublequote' else value
+ q=re.sub(r'\$\{([A-Za-z_][A-Za-z_0-9]*)(?::([^}]+))?\}',brace,q)
+ q=re.sub(r'\$([A-Za-z_][A-Za-z_0-9]*)',lambda m:values.get(m.group(1),'.+'),q)
  return q
 def run(item):
- file,title,typ,q=item; q=expand(q)
+ file,title,typ,q=item; q=expand(q,file)
  base={'prometheus':'http://127.0.0.1:19009/prometheus/api/v1/query','loki':'http://127.0.0.1:13100/loki/api/v1/query','tempo':'http://127.0.0.1:13200/api/search'}[typ]
  params={'q':q,'limit':5,'start':int(time.time()-3600),'end':int(time.time())} if typ=='tempo' else {'query':q}
  if typ=='loki' and not re.match(r'\s*(topk|sum|count|bytes_over_time|quantile_over_time|max|max_over_time|count_over_time)',q):
@@ -25,15 +35,15 @@ def run(item):
   detail=e.read().decode() if isinstance(e,urllib.error.HTTPError) else str(e)
   return {'file':file,'panel':title,'type':typ,'status':'error','error':detail,'query':q}
 items=[]
-for p in root.glob('*.json'):
+for p in root.rglob('*.json'):
  d=json.loads(p.read_text())
- for panel in d['panels']:
+ for panel in d.get('panels',[]):
   for t in panel.get('targets',[]):
    if t.get('hide'):continue
    typ=t.get('datasource',panel.get('datasource',{})).get('type','prometheus')
    q=t.get('expr',t.get('query',''))
    if typ not in ('prometheus','loki','tempo') or not q or t.get('queryType')=='traceId':continue
-   items.append((p.name,panel['title'],typ,q))
+   items.append((str(p.relative_to(root)),panel['title'],typ,q))
 with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool: results=list(pool.map(run,items))
 
 for r in results:print(r['status'],r.get('series',''),r['file'],r['panel'],r.get('error',''))

@@ -111,10 +111,20 @@ alloy:
       }
       prometheus.scrape "observability" {
         targets = [
-          {"__address__" = "alloy.alloy.svc.cluster.local:12345"},
-          {"__address__" = "mimir.mimir.svc.cluster.local:9009"},
-          {"__address__" = "tempo.tempo.svc.cluster.local:3200"},
-          {"__address__" = "loki.loki.svc.cluster.local:3100"},
+          {"__address__" = "alloy.alloy.svc.cluster.local:12345", "job" = "alloy", "namespace" = "alloy", "cluster" = "ops", "pod" = "alloy"},
+          {"__address__" = "mimir.mimir.svc.cluster.local:9009", "job" = "mimir/mimir", "namespace" = "mimir", "cluster" = "ops", "pod" = "mimir"},
+          {"__address__" = "tempo.tempo.svc.cluster.local:3200", "job" = "tempo", "namespace" = "tempo", "cluster" = "ops", "pod" = "tempo"},
+          {"__address__" = "loki.loki.svc.cluster.local:3100", "job" = "loki/loki", "namespace" = "loki", "cluster" = "ops", "pod" = "loki"},
+        ]
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
+      prometheus.scrape "argocd" {
+        targets = [
+          {"__address__" = "argocd-metrics.argocd.svc.cluster.local:8082", "job" = "argocd-metrics", "namespace" = "argocd", "cluster" = "ops"},
+          {"__address__" = "argocd-server-metrics.argocd.svc.cluster.local:8083", "job" = "argocd-server-metrics", "namespace" = "argocd", "cluster" = "ops"},
+          {"__address__" = "argocd-repo-server.argocd.svc.cluster.local:8084", "job" = "argocd-repo-server-metrics", "namespace" = "argocd", "cluster" = "ops"},
+          {"__address__" = "argocd-applicationset-controller.argocd.svc.cluster.local:8080", "job" = "argocd-applicationset-metrics", "namespace" = "argocd", "cluster" = "ops"},
         ]
         scrape_interval = "15s"
         forward_to = [prometheus.remote_write.mimir.receiver]

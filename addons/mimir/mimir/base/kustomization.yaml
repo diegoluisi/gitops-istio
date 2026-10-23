@@ -10,3 +10,4 @@ configMapGenerator:
   - name: mimir-recording-rules
     files:
       - istio.yaml=rules/istio.yaml
+      - service-dashboards.yaml=rules/service-dashboards.yaml
