@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: details-circuit-breaker
+spec:
+  host: details.bookinfo.svc.cluster.local
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+        connectTimeout: 1s
+      http:
+        http1MaxPendingRequests: 1
+        http2MaxRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 5s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 100
+      minHealthPercent: 0

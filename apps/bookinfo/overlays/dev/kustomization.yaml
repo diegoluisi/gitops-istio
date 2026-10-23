@@ -10,3 +10,4 @@ resources:
   - egress/httpbin.yaml
   - egress/wikipedia.yaml
   - egress/example.yaml
+  - circuit-breaker.yaml
