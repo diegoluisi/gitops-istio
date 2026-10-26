@@ -1,2 +1,5 @@
 # Downloaded by Kustomize Helm inflation during local builds
 **/base/charts/
+
+# Kustomize Helm caches may also live under overlays.
+**/charts/
