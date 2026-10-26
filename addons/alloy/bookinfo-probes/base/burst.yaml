@@ -21,6 +21,10 @@ spec:
             sidecar.istio.io/inject: "true"
           annotations:
             sidecar.istio.io/nativeSidecar: "true"
+            proxy.istio.io/config: |
+              proxyStatsMatcher:
+                inclusionRegexps:
+                  - ".*details.*(upstream_rq_active|upstream_rq_pending_active|upstream_rq_pending_overflow|upstream_cx_active|upstream_cx_overflow|outlier_detection.*).*"
         spec:
           restartPolicy: Never
           automountServiceAccountToken: false

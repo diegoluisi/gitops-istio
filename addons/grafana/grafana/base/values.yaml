@@ -1285,7 +1285,7 @@ alerting:
               type: prometheus
               uid: mimir
             refId: A
-            expr: max(clamp_min(prometheus_remote_storage_highest_timestamp_in_seconds-prometheus_remote_storage_queue_highest_sent_timestamp_seconds,0))
+            expr: max(clamp_min(prometheus_remote_storage_highest_timestamp_in_seconds - ignoring(remote_name,url) group_right prometheus_remote_storage_queue_highest_sent_timestamp_seconds,0))
             instant: true
             range: false
             intervalMs: 15000

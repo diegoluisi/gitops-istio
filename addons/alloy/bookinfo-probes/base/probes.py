@@ -98,7 +98,9 @@ if __name__ == '__main__':
     if args.burst:
         with concurrent.futures.ThreadPoolExecutor(max_workers=32) as pool:
             results = list(pool.map(lambda _: fetch(*TARGETS['internal_details'])[2], range(200)))
-        print(json.dumps({'requests': 200, 'concurrency': 32, 'results': dict(collections.Counter(results))}))
+        print(json.dumps({'requests': 200, 'concurrency': 32, 'results': dict(collections.Counter(results))}), flush=True)
+        # Keep the proxy alive for two scrape intervals before the Job exits.
+        time.sleep(30)
     else:
         threading.Thread(target=loop, daemon=True).start()
         ThreadingHTTPServer(('0.0.0.0', 9090), Handler).serve_forever()
