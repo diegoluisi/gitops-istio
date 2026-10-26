@@ -74,6 +74,8 @@ kubectl -n alloy create job --from=cronjob/bookinfo-load-burst "$job"
 kubectl -n alloy logs -f job/"$job" -c load
 ```
 
+The Job warms up once, waits 20 seconds for a counter baseline, then holds its
+proxy alive for 30 seconds after the burst so Alloy can scrape the increments.
 The CronJob is suspended by default. Kubernetes native sidecars allow the Job to
 complete. Completed Jobs expire after ten minutes. With the intentionally small
 circuit-breaker limits, 503s during this experiment are expected. Watch the

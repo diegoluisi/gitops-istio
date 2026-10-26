@@ -96,6 +96,9 @@ if __name__ == '__main__':
     parser.add_argument('--burst', action='store_true')
     args = parser.parse_args()
     if args.burst:
+        # Instantiate the cluster and let Alloy scrape a zero-overflow baseline.
+        fetch(*TARGETS['internal_details'])
+        time.sleep(20)
         with concurrent.futures.ThreadPoolExecutor(max_workers=32) as pool:
             results = list(pool.map(lambda _: fetch(*TARGETS['internal_details'])[2], range(200)))
         print(json.dumps({'requests': 200, 'concurrency': 32, 'results': dict(collections.Counter(results))}), flush=True)
