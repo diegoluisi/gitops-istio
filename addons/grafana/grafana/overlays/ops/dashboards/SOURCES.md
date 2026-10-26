@@ -95,7 +95,7 @@ and single-binary Tempo 3.1. Changes are explicit:
 
 - Use current `otelcol_*_total` counters, Alloy process resource metrics, and job
   selectors rather than absent Kubernetes `service` labels.
-- Replace Tempo ingester metrics with current live-store/block-builder metrics.
+- Replace Tempo ingester metrics with current live-store metrics.
 - Use the existing Alloy spanmetrics/servicegraph output (including `service_name`
   labels) rather than enabling duplicate generation inside Tempo.
 - Replace unsupported cache/tail-sampler/load-balancer sections with real batch,
