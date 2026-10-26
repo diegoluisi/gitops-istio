@@ -4,6 +4,7 @@ namespace: grafana
 resources:
   - ../../base
   - virtualservice.yaml
+  - dashboard-egress.yaml
 configMapGenerator:
   - name: grafana-istio-dashboards
     options:
@@ -30,6 +31,10 @@ configMapGenerator:
       annotations:
         grafana_folder: "/tmp/dashboards/Kubernetes"
     files:
+      - views-global.json=dashboards/kubernetes/views-global.json
+      - views-namespaces.json=dashboards/kubernetes/views-namespaces.json
+      - views-nodes.json=dashboards/kubernetes/views-nodes.json
+      - views-pods.json=dashboards/kubernetes/views-pods.json
       - kubernetes-health.json=dashboards/kubernetes/kubernetes-health.json
       - cluster.json=dashboards/kubernetes/kubernetes-overview.json
       - nodes.json=dashboards/kubernetes/kubernetes-nodes.json
@@ -68,6 +73,7 @@ configMapGenerator:
         grafana_folder: "/tmp/dashboards/Loki"
     files:
       - default-operational.json=dashboards/loki/default-operational.json
+      - global-metrics-13407.json=dashboards/loki/global-metrics-13407.json
   - name: grafana-alloy-dashboards
     options:
       labels:

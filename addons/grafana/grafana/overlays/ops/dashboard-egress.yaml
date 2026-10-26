@@ -1,0 +1,14 @@
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: grafana-dashboard-downloads
+spec:
+  exportTo: ["."]
+  hosts:
+    - grafana.com
+  location: MESH_EXTERNAL
+  ports:
+    - number: 443
+      name: tls-grafana-com
+      protocol: TLS
+  resolution: DNS

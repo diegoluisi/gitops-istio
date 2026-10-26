@@ -52,3 +52,33 @@ were exported from the running Grafana instance without changing their queries o
 UIDs. They are now provisioned in the Istio folder as default-*.json; the Workload
 dashboard previously lived in General. Their exported dashboard metadata retains
 upstream descriptions and version information.
+
+## Additional Grafana.com imports
+
+Pinned copies with stable upstream UIDs, Mimir datasource binding and local cluster defaults:
+
+| ID | Dashboard | Revision |
+|---|---|---|
+| 15757 | Kubernetes / Views / Global | 43 |
+| 15758 | Kubernetes / Views / Namespaces | 46 |
+| 15759 | Kubernetes / Views / Nodes | 40 |
+| 15760 | Kubernetes / Views / Pods | 41 |
+| 13407 | Loki2.0 Global Metrics | 1 |
+
+Source: `https://grafana.com/api/dashboards/<ID>/revisions/<REV>/download`.
+Kubernetes dashboards are by dotdc: https://github.com/dotdc/grafana-dashboards-kubernetes.
+The Pods view's container CPU query uses our cAdvisor job rather than the
+kube-state-metrics job used for object state. Linux-only/hardware-dependent
+metrics may be absent. Loki queries are scoped to `job="loki/loki"` so Cortex
+prefixes cannot accidentally display Mimir data. The legacy log counter is mapped
+to `loki_internal_log_messages_total`; typoed tenant aggregation labels are fixed.
+Legacy graph panels and the external pie-chart plugin are converted to Grafana
+built-in timeseries/piechart panels. Optional ruler/cache/Cassandra/S3 and legacy storage panels can remain empty on
+Loki 3.x with filesystem storage. The modern Loki operational dashboard remains
+the primary operational view.
+
+`dashboard-egress.yaml` registers `grafana.com:443` only in Grafana's namespace.
+This permits backend dashboard downloads/import-by-ID under `REGISTRY_ONLY`.
+Provisioned copies remain pinned in Git; manual import-by-ID changes are separate
+from these files and can conflict with the same upstream UID. No mesh-wide
+ALLOW_ANY, plugin CDN access or unrelated external hosts are enabled.
