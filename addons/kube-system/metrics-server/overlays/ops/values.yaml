@@ -1,0 +1,12 @@
+fullnameOverride: metrics-server
+replicas: 1
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    memory: 192Mi
+# Docker Desktop kubelet serving certificates are not signed by a trusted CA.
+# This exception is scoped to the local ops overlay, not the reusable base.
+args:
+  - --kubelet-insecure-tls

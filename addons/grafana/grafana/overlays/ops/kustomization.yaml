@@ -31,6 +31,10 @@ configMapGenerator:
         grafana_folder: "/tmp/dashboards/Kubernetes"
     files:
       - kubernetes-health.json=dashboards/kubernetes/kubernetes-health.json
+      - cluster.json=dashboards/kubernetes/kubernetes-overview.json
+      - nodes.json=dashboards/kubernetes/kubernetes-nodes.json
+      - containers.json=dashboards/kubernetes/kubernetes-containers.json
+      - control-plane.json=dashboards/kubernetes/kubernetes-control-plane.json
   - name: grafana-argocd-dashboards
     options:
       labels:

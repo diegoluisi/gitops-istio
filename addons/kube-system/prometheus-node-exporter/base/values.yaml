@@ -1,0 +1,9 @@
+fullnameOverride: node-exporter
+podLabels:
+  sidecar.istio.io/inject: "false"
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    memory: 128Mi
