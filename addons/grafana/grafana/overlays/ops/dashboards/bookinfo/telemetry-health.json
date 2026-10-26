@@ -61,7 +61,7 @@
         {
           "refId": "A",
           "expr": "up{job=~\"alloy|mimir/mimir|loki/loki|tempo|bookinfo-probes\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -90,7 +90,7 @@
         {
           "refId": "A",
           "expr": "time()-bookinfo_probe_last_run_timestamp_seconds",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -119,7 +119,7 @@
         {
           "refId": "A",
           "expr": "sum by (exporter) (rate(otelcol_exporter_sent_spans_total[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -148,7 +148,7 @@
         {
           "refId": "A",
           "expr": "sum by (exporter) (rate(otelcol_exporter_send_failed_spans_total[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -177,7 +177,7 @@
         {
           "refId": "A",
           "expr": "otelcol_exporter_queue_size / clamp_min(otelcol_exporter_queue_capacity,1)",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -206,7 +206,7 @@
         {
           "refId": "A",
           "expr": "prometheus_remote_storage_samples_pending",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -235,7 +235,7 @@
         {
           "refId": "A",
           "expr": "rate(prometheus_remote_storage_samples_failed_total[5m])",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -264,7 +264,7 @@
         {
           "refId": "A",
           "expr": "clamp_min(prometheus_remote_storage_highest_timestamp_in_seconds-prometheus_remote_storage_queue_highest_sent_timestamp_seconds,0)",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -293,7 +293,7 @@
         {
           "refId": "A",
           "expr": "sum by (reason) (rate(loki_discarded_samples_total[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -322,7 +322,7 @@
         {
           "refId": "A",
           "expr": "sum by (reason) (rate(tempo_discarded_spans_total[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -351,7 +351,7 @@
         {
           "refId": "A",
           "expr": "sum by (reason) (rate(cortex_discarded_samples_total[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -380,7 +380,7 @@
         {
           "refId": "A",
           "expr": "1 - kubelet_volume_stats_available_bytes{namespace=~\"mimir|loki|tempo|grafana\"} / kubelet_volume_stats_capacity_bytes{namespace=~\"mimir|loki|tempo|grafana\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -409,7 +409,7 @@
         {
           "refId": "A",
           "expr": "sum by (namespace,pod) (increase(kube_pod_container_status_restarts_total{namespace=~\"alloy|mimir|loki|tempo|grafana\"}[15m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -438,7 +438,7 @@
         {
           "refId": "A",
           "expr": "kube_pod_status_ready{namespace=~\"alloy|mimir|loki|tempo|grafana\",condition=\"true\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]

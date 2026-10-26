@@ -61,7 +61,7 @@
         {
           "refId": "A",
           "expr": "sum by (response_code,response_flags) (rate(istio_requests_total{reporter=\"source\",destination_service_name=\"details\",destination_service_namespace=\"bookinfo\"}[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -89,8 +89,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "envoy_cluster_upstream_rq_active{envoy_cluster_name=~\".*details.*\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "expr": "envoy_cluster_upstream_rq_active{cluster_name=~\".*details.*\"}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -118,8 +118,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "envoy_cluster_upstream_rq_pending_active{envoy_cluster_name=~\".*details.*\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "expr": "envoy_cluster_upstream_rq_pending_active{cluster_name=~\".*details.*\"}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -147,8 +147,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (pod) (increase(envoy_cluster_upstream_rq_pending_overflow{envoy_cluster_name=~\".*details.*\"}[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "expr": "sum by (pod) (increase(envoy_cluster_upstream_rq_pending_overflow{cluster_name=~\".*details.*\"}[5m]))",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -176,8 +176,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "sum by (pod) (increase(envoy_cluster_upstream_cx_overflow{envoy_cluster_name=~\".*details.*\"}[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "expr": "sum by (pod) (increase(envoy_cluster_upstream_cx_overflow{cluster_name=~\".*details.*\"}[5m]))",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -205,8 +205,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "envoy_cluster_outlier_detection_ejections_active{envoy_cluster_name=~\".*details.*\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "expr": "envoy_cluster_outlier_detection_ejections_active{cluster_name=~\".*details.*\"}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -234,8 +234,8 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "envoy_cluster_upstream_cx_active{envoy_cluster_name=~\".*details.*\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "expr": "envoy_cluster_upstream_cx_active{cluster_name=~\".*details.*\"}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -264,7 +264,7 @@
         {
           "refId": "A",
           "expr": "kube_deployment_status_replicas_available{namespace=\"bookinfo\",deployment=\"details-v1\"}",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]

@@ -61,7 +61,7 @@
         {
           "refId": "A",
           "expr": "bookinfo_probe_success",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -90,7 +90,7 @@
         {
           "refId": "A",
           "expr": "time() - bookinfo_probe_last_run_timestamp_seconds",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -119,7 +119,7 @@
         {
           "refId": "A",
           "expr": "bookinfo:slo_availability:ratio7d",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -148,7 +148,7 @@
         {
           "refId": "A",
           "expr": "bookinfo:slo_latency:ratio7d",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -177,7 +177,7 @@
         {
           "refId": "A",
           "expr": "1 - (1 - bookinfo:slo_availability:ratio7d) / 0.005",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -206,7 +206,7 @@
         {
           "refId": "A",
           "expr": "histogram_quantile(0.95, sum by (le,probe) (rate(bookinfo_probe_duration_seconds_bucket[5m])))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -235,7 +235,7 @@
         {
           "refId": "A",
           "expr": "sum by (destination_service_name) (rate(istio_requests_total{reporter=\"destination\",destination_workload_namespace=\"bookinfo\"}[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -264,7 +264,7 @@
         {
           "refId": "A",
           "expr": "sum by (source_workload,response_flags) (rate(istio_requests_total{reporter=\"source\",destination_service_namespace=\"bookinfo\",response_code=~\"5..\"}[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -293,7 +293,7 @@
         {
           "refId": "A",
           "expr": "(1 - bookinfo:slo_availability:ratio1h) / 0.005",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
@@ -322,7 +322,7 @@
         {
           "refId": "A",
           "expr": "sum by (probe) (rate(bookinfo_probe_requests_total{outcome=\"success\"}[5m]))",
-          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "legendFormat": "__auto",
           "range": true
         }
       ]
