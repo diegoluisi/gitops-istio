@@ -276,6 +276,35 @@
           "range": true
         }
       ]
+    },
+    {
+      "id": 10,
+      "title": "Samples discarded by metric hygiene / second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(alloy_prometheus_relabel_metrics_processed{component_id=\"prometheus.relabel.metrics_hygiene\"}[5m])) - sum(rate(alloy_prometheus_relabel_metrics_written{component_id=\"prometheus.relabel.metrics_hygiene\"}[5m]))",
+          "legendFormat": "Dropped samples",
+          "range": true
+        }
+      ]
     }
   ]
 }

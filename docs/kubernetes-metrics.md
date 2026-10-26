@@ -107,8 +107,8 @@ up{job=~"kube-state-metrics|kubernetes-cadvisor|kubernetes-kubelet|kubernetes-no
 ```
 
 Confirm node-exporter, container CPU, API request and DNS request series have data.
-Alloy's `prometheus_relabel_metrics_processed` and
-`prometheus_relabel_metrics_written` self-metrics show samples passing through the
+Alloy's `alloy_prometheus_relabel_metrics_processed` and
+`alloy_prometheus_relabel_metrics_written` self-metrics show samples passing through the
 filter; the difference indicates drops (when exposed by the installed version).
 Check exporter `/metrics` versus new timestamps in Mimir to verify a specific
 filtered family. Existing samples can remain visible during lookback/retention.
