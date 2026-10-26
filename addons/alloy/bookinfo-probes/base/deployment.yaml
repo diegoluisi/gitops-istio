@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookinfo-probes
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookinfo-probes
+  template:
+    metadata:
+      labels:
+        app: bookinfo-probes
+        sidecar.istio.io/inject: "true"
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: probes
+          image: python:3.13.9-slim
+          command: [python, -u, /app/probes.py]
+          ports:
+            - name: http-metrics
+              containerPort: 9090
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 96Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http-metrics
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http-metrics
+          volumeMounts:
+            - name: script
+              mountPath: /app
+              readOnly: true
+      volumes:
+        - name: script
+          configMap:
+            name: bookinfo-probes

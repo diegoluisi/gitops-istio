@@ -1,0 +1,301 @@
+{
+  "uid": "bookinfo-resilience",
+  "title": "Bookinfo Resilience",
+  "description": "Counters require restarted callers with proxyStatsMatcher; no series is not zero. UO=overflow, UH=no healthy upstream, UF=connection failure. Limits apply independently at each calling proxy.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "bookinfo",
+    "gitops"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "green",
+        "name": "Dev deployments",
+        "type": "tags",
+        "tags": [
+          "argocd",
+          "deployment",
+          "dev"
+        ],
+        "matchAny": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Details responses by code/flag",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (response_code,response_flags) (rate(istio_requests_total{reporter=\"source\",destination_service_name=\"details\",destination_service_namespace=\"bookinfo\"}[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Active upstream requests",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "envoy_cluster_upstream_rq_active{envoy_cluster_name=~\".*details.*\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Pending upstream requests",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "envoy_cluster_upstream_rq_pending_active{envoy_cluster_name=~\".*details.*\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Pending request overflow",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (pod) (increase(envoy_cluster_upstream_rq_pending_overflow{envoy_cluster_name=~\".*details.*\"}[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Connection overflow",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (pod) (increase(envoy_cluster_upstream_cx_overflow{envoy_cluster_name=~\".*details.*\"}[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Active ejections",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "envoy_cluster_outlier_detection_ejections_active{envoy_cluster_name=~\".*details.*\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Active connections",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "envoy_cluster_upstream_cx_active{envoy_cluster_name=~\".*details.*\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Ready Details replicas",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "kube_deployment_status_replicas_available{namespace=\"bookinfo\",deployment=\"details-v1\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 99,
+      "title": "Details proxy failures",
+      "type": "logs",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 24,
+        "h": 10
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{namespace=\"bookinfo\",container=\"istio-proxy\",log_type=\"access\"} |= \"details\" |~ \" 503 (UO|UH|UF)\""
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "link",
+      "title": "Runbook",
+      "url": "https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md"
+    }
+  ]
+}

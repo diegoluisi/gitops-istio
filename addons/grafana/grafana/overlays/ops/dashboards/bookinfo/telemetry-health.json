@@ -1,0 +1,454 @@
+{
+  "uid": "telemetry-health",
+  "title": "Telemetry Pipeline Health",
+  "description": "Missing failure-counter series can mean never instantiated. Missing scrape targets are unknown and alerted separately. Docker Desktop may not expose PVC capacity metrics. Use exporter logs to confirm errors.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "bookinfo",
+    "gitops"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "green",
+        "name": "Dev deployments",
+        "type": "tags",
+        "tags": [
+          "argocd",
+          "deployment",
+          "dev"
+        ],
+        "matchAny": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Expected scrape targets",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "up{job=~\"alloy|mimir/mimir|loki/loki|tempo|bookinfo-probes\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Probe data age",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time()-bookinfo_probe_last_run_timestamp_seconds",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "OTLP spans exported",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (exporter) (rate(otelcol_exporter_sent_spans_total[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "OTLP send failures",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (exporter) (rate(otelcol_exporter_send_failed_spans_total[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "OTLP queue utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "otelcol_exporter_queue_size / clamp_min(otelcol_exporter_queue_capacity,1)",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Remote write pending samples",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "prometheus_remote_storage_samples_pending",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Remote write sample failures",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(prometheus_remote_storage_samples_failed_total[5m])",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Remote write lag",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "clamp_min(prometheus_remote_storage_highest_timestamp_in_seconds-prometheus_remote_storage_queue_highest_sent_timestamp_seconds,0)",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Loki discarded samples",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (reason) (rate(loki_discarded_samples_total[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Tempo discarded spans",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (reason) (rate(tempo_discarded_spans_total[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Mimir discarded samples",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (reason) (rate(cortex_discarded_samples_total[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Backend PVC utilization",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 40,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1 - kubelet_volume_stats_available_bytes{namespace=~\"mimir|loki|tempo|grafana\"} / kubelet_volume_stats_capacity_bytes{namespace=~\"mimir|loki|tempo|grafana\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Observability pod restarts",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 48,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (namespace,pod) (increase(kube_pod_container_status_restarts_total{namespace=~\"alloy|mimir|loki|tempo|grafana\"}[15m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Backend readiness",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 48,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "kube_pod_status_ready{namespace=~\"alloy|mimir|loki|tempo|grafana\",condition=\"true\"}",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "link",
+      "title": "Runbook",
+      "url": "https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md"
+    }
+  ]
+}

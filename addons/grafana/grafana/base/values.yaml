@@ -1,4 +1,3 @@
----
 fullnameOverride: grafana
 persistence:
   enabled: true
@@ -38,7 +37,7 @@ datasources:
           enabled: true
         tracesToMetrics:
           datasourceUid: mimir
-          spanStartTimeShift: "-5m"
+          spanStartTimeShift: -5m
           spanEndTimeShift: 5m
           tags: []
           queries:
@@ -47,7 +46,7 @@ datasources:
               (rate(istio_requests_total{reporter="destination"}[5m]))
         tracesToLogsV2:
           datasourceUid: loki
-          spanStartTimeShift: "-1m"
+          spanStartTimeShift: -1m
           spanEndTimeShift: 1m
           customQuery: true
           query: '{job="integrations/istio",container="istio-proxy",log_type="access"}
@@ -69,20 +68,20 @@ datasources:
       jsonData:
         derivedFields:
         - name: TraceID
-          matcherRegex: 'traceID=([0-9a-fA-F]{16,32})(?:\s|$)'
+          matcherRegex: traceID=([0-9a-fA-F]{16,32})(?:\s|$)
           datasourceUid: tempo
-          url: "$${__value.raw}"
+          url: $${__value.raw}
           urlDisplayLabel: Tempo
 sidecar:
   dashboards:
     enabled: true
     label: grafana_dashboard
     searchNamespace: grafana
-    folder: "/tmp/dashboards"
+    folder: /tmp/dashboards
     folderAnnotation: grafana_folder
     provider:
       name: gitops
-      folder: ""
+      folder: ''
       foldersFromFilesStructure: true
       disableDelete: false
       allowUiUpdates: false
@@ -444,6 +443,1124 @@ alerting:
               uid: mimir
             refId: A
             expr: (up{job="integrations/istio"} == bool 0) or absent(up{job="integrations/istio"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+  bookinfo-rules.yaml:
+    apiVersion: 1
+    groups:
+    - orgId: 1
+      name: bookinfo-reliability
+      folder: Bookinfo
+      interval: 1m
+      rules:
+      - uid: bookinfo-availability-1h
+        title: Bookinfo availability error budget burn (5m/1h)
+        condition: B
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Bookinfo availability error budget burn (5m/1h)
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: ((1 - bookinfo:slo_availability:ratio5m) / 0.005 > 6) and ((1 -
+              bookinfo:slo_availability:ratio1h) / 0.005 > 6) and on(cluster,probe)
+              (sum by(cluster,probe)(increase(bookinfo_probe_requests_total[5m]))
+              >= 30)
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 6
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: bookinfo-availability-6h
+        title: Bookinfo availability error budget burn (30m/6h)
+        condition: B
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Bookinfo availability error budget burn (30m/6h)
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: ((1 - bookinfo:slo_availability:ratio30m) / 0.005 > 3) and ((1 -
+              bookinfo:slo_availability:ratio6h) / 0.005 > 3) and on(cluster,probe)
+              (sum by(cluster,probe)(increase(bookinfo_probe_requests_total[5m]))
+              >= 30)
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 3
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: bookinfo-latency-1h
+        title: Bookinfo latency error budget burn (5m/1h)
+        condition: B
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Bookinfo latency error budget burn (5m/1h)
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: ((1 - bookinfo:slo_latency:ratio5m) / 0.05 > 6) and ((1 - bookinfo:slo_latency:ratio1h)
+              / 0.05 > 6) and on(cluster,probe) (sum by(cluster,probe)(increase(bookinfo_probe_requests_total[5m]))
+              >= 30)
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 6
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: bookinfo-latency-6h
+        title: Bookinfo latency error budget burn (30m/6h)
+        condition: B
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Bookinfo latency error budget burn (30m/6h)
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: ((1 - bookinfo:slo_latency:ratio30m) / 0.05 > 3) and ((1 - bookinfo:slo_latency:ratio6h)
+              / 0.05 > 3) and on(cluster,probe) (sum by(cluster,probe)(increase(bookinfo_probe_requests_total[5m]))
+              >= 30)
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 3
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: bookinfo-probe-failure
+        title: Bookinfo synthetic journey failing
+        condition: B
+        for: 2m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Bookinfo synthetic journey failing
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: 1 - bookinfo_probe_success
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: bookinfo-probe-stale
+        title: Bookinfo synthetic data stale
+        condition: B
+        for: 2m
+        noDataState: Alerting
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Bookinfo synthetic data stale
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: time() - bookinfo_probe_last_run_timestamp_seconds
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 60
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: scrape-alloy
+        title: 'Telemetry scrape unavailable: alloy'
+        condition: B
+        for: 2m
+        noDataState: Alerting
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: 'Telemetry scrape unavailable: alloy'
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: (1 - min(up{job="alloy"})) or absent(up{job="alloy"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: scrape-mimir-mimir
+        title: 'Telemetry scrape unavailable: mimir/mimir'
+        condition: B
+        for: 2m
+        noDataState: Alerting
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: 'Telemetry scrape unavailable: mimir/mimir'
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: (1 - min(up{job="mimir/mimir"})) or absent(up{job="mimir/mimir"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: scrape-loki-loki
+        title: 'Telemetry scrape unavailable: loki/loki'
+        condition: B
+        for: 2m
+        noDataState: Alerting
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: 'Telemetry scrape unavailable: loki/loki'
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: (1 - min(up{job="loki/loki"})) or absent(up{job="loki/loki"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: scrape-tempo
+        title: 'Telemetry scrape unavailable: tempo'
+        condition: B
+        for: 2m
+        noDataState: Alerting
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: 'Telemetry scrape unavailable: tempo'
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: (1 - min(up{job="tempo"})) or absent(up{job="tempo"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: scrape-bookinfo-probes
+        title: 'Telemetry scrape unavailable: bookinfo-probes'
+        condition: B
+        for: 2m
+        noDataState: Alerting
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: 'Telemetry scrape unavailable: bookinfo-probes'
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: (1 - min(up{job="bookinfo-probes"})) or absent(up{job="bookinfo-probes"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: otlp-export-failure
+        title: Alloy OTLP trace export failures
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Alloy OTLP trace export failures
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(rate(otelcol_exporter_send_failed_spans_total[5m]))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: otlp-queue-pressure
+        title: Alloy OTLP queue above 80%
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Alloy OTLP queue above 80%
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: max(otelcol_exporter_queue_size / clamp_min(otelcol_exporter_queue_capacity,1))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0.8
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: remote-write-failure
+        title: Alloy remote write sample failures
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Alloy remote write sample failures
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(rate(prometheus_remote_storage_samples_failed_total[5m]))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: remote-write-lag
+        title: Alloy remote write lag above 60s
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Alloy remote write lag above 60s
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: max(clamp_min(prometheus_remote_storage_highest_timestamp_in_seconds-prometheus_remote_storage_queue_highest_sent_timestamp_seconds,0))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 60
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: loki-discarded
+        title: Loki discarding telemetry
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Loki discarding telemetry
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(rate(loki_discarded_samples_total[5m]))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: tempo-discarded
+        title: Tempo discarding telemetry
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Tempo discarding telemetry
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(rate(tempo_discarded_spans_total[5m]))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: mimir-discarded
+        title: Mimir discarding telemetry
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Mimir discarding telemetry
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(rate(cortex_discarded_samples_total[5m]))
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: telemetry-pvc-full
+        title: Observability PVC above 85%
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Observability PVC above 85%
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: max(1 - kubelet_volume_stats_available_bytes{namespace=~"mimir|loki|tempo|grafana"}/kubelet_volume_stats_capacity_bytes{namespace=~"mimir|loki|tempo|grafana"})
+            instant: true
+            range: false
+            intervalMs: 15000
+            maxDataPoints: 1000
+        - refId: B
+          datasourceUid: __expr__
+          relativeTimeRange:
+            from: 0
+            to: 0
+          model:
+            refId: B
+            type: classic_conditions
+            datasource:
+              type: __expr__
+              uid: __expr__
+            conditions:
+            - evaluator:
+                type: gt
+                params:
+                - 0.85
+              operator:
+                type: and
+              query:
+                params:
+                - A
+              reducer:
+                type: last
+                params: []
+              type: query
+      - uid: telemetry-not-ready
+        title: Observability pods not ready
+        condition: B
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        isPaused: false
+        labels:
+          severity: warning
+          integration: bookinfo
+          owner: sre
+        annotations:
+          summary: Observability pods not ready
+          runbook_url: https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md
+        data:
+        - refId: A
+          datasourceUid: mimir
+          relativeTimeRange:
+            from: 600
+            to: 0
+          model:
+            datasource:
+              type: prometheus
+              uid: mimir
+            refId: A
+            expr: sum(kube_pod_status_ready{namespace=~"alloy|mimir|loki|tempo|grafana",condition="false"})
             instant: true
             range: false
             intervalMs: 15000

@@ -1,0 +1,34 @@
+groups:
+- name: bookinfo.slo
+  interval: 30s
+  rules:
+  - record: bookinfo:slo_availability:ratio5m
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_requests_total{outcome="success"}[5m]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[5m]))
+  - record: bookinfo:slo_latency:ratio5m
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_good_latency_total[5m]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[5m]))
+  - record: bookinfo:slo_availability:ratio1h
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_requests_total{outcome="success"}[1h]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[1h]))
+  - record: bookinfo:slo_latency:ratio1h
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_good_latency_total[1h]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[1h]))
+  - record: bookinfo:slo_availability:ratio30m
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_requests_total{outcome="success"}[30m]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[30m]))
+  - record: bookinfo:slo_latency:ratio30m
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_good_latency_total[30m]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[30m]))
+  - record: bookinfo:slo_availability:ratio6h
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_requests_total{outcome="success"}[6h]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[6h]))
+  - record: bookinfo:slo_latency:ratio6h
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_good_latency_total[6h]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[6h]))
+  - record: bookinfo:slo_availability:ratio7d
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_requests_total{outcome="success"}[7d]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[7d]))
+  - record: bookinfo:slo_latency:ratio7d
+    expr: sum by (cluster, probe) (increase(bookinfo_probe_good_latency_total[7d]))
+      / sum by (cluster, probe) (increase(bookinfo_probe_requests_total[7d]))

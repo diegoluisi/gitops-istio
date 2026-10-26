@@ -11,3 +11,4 @@ configMapGenerator:
     files:
       - istio.yaml=rules/istio.yaml
       - service-dashboards.yaml=rules/service-dashboards.yaml
+      - bookinfo.yaml=rules/bookinfo.yaml

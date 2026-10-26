@@ -75,3 +75,13 @@ configMapGenerator:
       - default-opentelemetry.json=dashboards/alloy/default-opentelemetry.json
       - default-prometheus-remote-write.json=dashboards/alloy/default-prometheus-remote-write.json
       - default-resources.json=dashboards/alloy/default-resources.json
+  - name: grafana-bookinfo-dashboards
+    options:
+      labels:
+        grafana_dashboard: "1"
+      annotations:
+        grafana_folder: "/tmp/dashboards/Bookinfo"
+    files:
+      - overview.json=dashboards/bookinfo/overview.json
+      - resilience.json=dashboards/bookinfo/resilience.json
+      - telemetry-health.json=dashboards/bookinfo/telemetry-health.json

@@ -11,3 +11,21 @@ resources:
   - egress/wikipedia.yaml
   - egress/example.yaml
   - circuit-breaker.yaml
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+    patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: bookinfo-proxy-statistics
+      spec:
+        template:
+          metadata:
+            annotations:
+              proxy.istio.io/config: |
+                proxyStatsMatcher:
+                  inclusionRegexps:
+                    - ".*details.*(upstream_rq_active|upstream_rq_pending_active|upstream_rq_pending_overflow|upstream_cx_active|upstream_cx_overflow|outlier_detection.*).*"

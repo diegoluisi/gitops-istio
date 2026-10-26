@@ -110,6 +110,12 @@ alloy:
         scrape_interval = "15s"
         forward_to = [prometheus.remote_write.mimir.receiver]
       }
+      prometheus.scrape "bookinfo_probes" {
+        targets = [{"__address__" = "bookinfo-probes.alloy.svc.cluster.local:9090", "cluster" = "ops"}]
+        job_name = "bookinfo-probes"
+        scrape_interval = "15s"
+        forward_to = [prometheus.remote_write.mimir.receiver]
+      }
       prometheus.scrape "observability" {
         targets = [
           {"__address__" = "alloy.alloy.svc.cluster.local:12345", "job" = "alloy", "namespace" = "alloy", "cluster" = "ops", "pod" = "alloy"},

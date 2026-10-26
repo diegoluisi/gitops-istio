@@ -1,0 +1,338 @@
+{
+  "uid": "bookinfo-overview",
+  "title": "Bookinfo Overview & SLOs",
+  "description": "Lab SLO: 99.5% successful content-checked journeys and 95% success within 1s over 7d. History is partial until 7d collected. Probes run inside the cluster through ingress; they do not test external DNS/LB reachability. No data is unknown, not success.",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": false,
+  "tags": [
+    "bookinfo",
+    "gitops"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "annotations": {
+    "list": [
+      {
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": false,
+        "iconColor": "green",
+        "name": "Dev deployments",
+        "type": "tags",
+        "tags": [
+          "argocd",
+          "deployment",
+          "dev"
+        ],
+        "matchAny": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Synthetic success (latest)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bool"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "bookinfo_probe_success",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Probe age",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "time() - bookinfo_probe_last_run_timestamp_seconds",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Availability / 7d observed history",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "bookinfo:slo_availability:ratio7d",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Latency good fraction \u22641s / 7d",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "bookinfo:slo_latency:ratio7d",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Availability error budget remaining",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "1 - (1 - bookinfo:slo_availability:ratio7d) / 0.005",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Synthetic p95 latency",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le,probe) (rate(bookinfo_probe_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Bookinfo service request rate",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (destination_service_name) (rate(istio_requests_total{reporter=\"destination\",destination_workload_namespace=\"bookinfo\"}[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Bookinfo 5xx by caller (includes proxy failures)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (source_workload,response_flags) (rate(istio_requests_total{reporter=\"source\",destination_service_namespace=\"bookinfo\",response_code=~\"5..\"}[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Availability burn rate / 1h",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(1 - bookinfo:slo_availability:ratio1h) / 0.005",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Successful journeys per second",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (probe) (rate(bookinfo_probe_requests_total{outcome=\"success\"}[5m]))",
+          "legendFormat": "{{probe}}{{job}}{{response_code}}{{response_flags}}{{pod}}",
+          "range": true
+        }
+      ]
+    }
+  ],
+  "links": [
+    {
+      "type": "link",
+      "title": "Runbook",
+      "url": "https://github.com/diegoluisi/gitops-istio/blob/main/docs/bookinfo-observability.md"
+    }
+  ]
+}
