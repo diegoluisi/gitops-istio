@@ -289,6 +289,35 @@
           "expr": "{namespace=\"bookinfo\",container=\"istio-proxy\",log_type=\"access\"} |= \"details\" |~ \" 503 (UO|UH|UF)\""
         }
       ]
+    },
+    {
+      "id": 9,
+      "title": "Active request overflow",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "mimir"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 42,
+        "w": 24,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (pod) (increase(envoy_cluster_upstream_rq_active_overflow{cluster_name=~\".*details.*\"}[5m]))",
+          "legendFormat": "__auto",
+          "range": true
+        }
+      ]
     }
   ],
   "links": [
