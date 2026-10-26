@@ -82,3 +82,31 @@ This permits backend dashboard downloads/import-by-ID under `REGISTRY_ONLY`.
 Provisioned copies remain pinned in Git; manual import-by-ID changes are separate
 from these files and can conflict with the same upstream UID. No mesh-wide
 ALLOW_ANY, plugin CDN access or unrelated external hosts are enabled.
+
+## OpenTelemetry & Tempo (23242)
+
+Source: https://grafana.com/api/dashboards/23242/revisions/1/download
+Upstream UID: `fe6ry0t5qk0zkb`, revision 1. Folder: Tempo. Datasource: Mimir.
+
+This is an adapted lab edition, not a byte-for-byte upstream import. The original
+assumes an older standalone OTel collector plus distributed Tempo, metrics-generator,
+Memcached, tail sampling and a load-balancing exporter. This environment uses Alloy
+and single-binary Tempo 3.1. Changes are explicit:
+
+- Use current `otelcol_*_total` counters, Alloy process resource metrics, and job
+  selectors rather than absent Kubernetes `service` labels.
+- Replace Tempo ingester metrics with current live-store/block-builder metrics.
+- Use the existing Alloy spanmetrics/servicegraph output (including `service_name`
+  labels) rather than enabling duplicate generation inside Tempo.
+- Replace unsupported cache/tail-sampler/load-balancer sections with real batch,
+  queue, resource, service-graph, span-latency and query-frontend signals.
+- Scope backend metrics to Tempo so remote-write panels cannot mix other backends.
+- Failure/discard counters may not exist before their first event. Their panels
+  derive zero only when the corresponding sent/received counter is present; if
+  that telemetry disappears, no-data remains visible.
+
+No Memcached, tail sampler, extra collector or Tempo metrics-generator was installed
+just to fill panels. The existing Alloy and Tempo scrapes already collect the
+necessary metrics. Span counts represent spans, not unique user requests. This
+custom edition should be reviewed when upgrading Alloy/Tempo or upstream dashboard
+revisions; do not overwrite it by importing the same UID manually.
