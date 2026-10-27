@@ -28,6 +28,31 @@ spec:
             host: details.bookinfo.svc.cluster.local
             port:
               number: 9080
+    - name: productpage-mirror
+      match:
+        - uri:
+            exact: /productpage
+          method:
+            exact: GET
+        - uri:
+            prefix: /productpage/
+          method:
+            exact: GET
+        - uri:
+            prefix: /api/v1/products
+          method:
+            exact: GET
+      route:
+        - destination:
+            host: productpage.bookinfo.svc.cluster.local
+            port:
+              number: 9080
+      mirror:
+        host: productpage.bookinfo-v2.svc.cluster.local
+        port:
+          number: 9080
+      mirrorPercentage:
+        value: 100
     - name: productpage
       match:
         - uri:
