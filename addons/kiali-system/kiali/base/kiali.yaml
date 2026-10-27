@@ -8,7 +8,6 @@ spec:
   auth:
     strategy: anonymous
   deployment:
-    namespace: kiali-system
     pod_labels:
       sidecar.istio.io/inject: "true"
     pod_annotations:
