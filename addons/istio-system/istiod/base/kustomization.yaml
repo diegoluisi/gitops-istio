@@ -9,4 +9,5 @@ helmCharts:
     includeCRDs: true
     valuesFile: values.yaml
 resources:
+  - peer-authentication.yaml
   - telemetry.yaml

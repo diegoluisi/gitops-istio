@@ -5,7 +5,6 @@ resources:
   - ../../base
   - egress/service-entry.yaml
   - egress/destination-rule.yaml
-  - peer-authentication.yaml
   - virtualservice.yaml
   - egress/httpbin.yaml
   - egress/wikipedia.yaml
