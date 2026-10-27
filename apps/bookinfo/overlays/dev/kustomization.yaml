@@ -10,6 +10,7 @@ resources:
   - egress/wikipedia.yaml
   - egress/example.yaml
   - circuit-breaker.yaml
+  - fault-injection.yaml
 patches:
   - target:
       group: apps

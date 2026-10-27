@@ -1,0 +1,31 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: reviews-fault-injection
+spec:
+  hosts:
+    - reviews.bookinfo.svc.cluster.local
+  gateways:
+    - mesh
+  http:
+    - name: reviews-abort-jason
+      match:
+        - headers:
+            end-user:
+              exact: jason
+      fault:
+        abort:
+          httpStatus: 503
+          percentage:
+            value: 100
+      route:
+        - destination:
+            host: reviews.bookinfo.svc.cluster.local
+            port:
+              number: 9080
+    - name: reviews-default
+      route:
+        - destination:
+            host: reviews.bookinfo.svc.cluster.local
+            port:
+              number: 9080
